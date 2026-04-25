@@ -11,6 +11,7 @@ import {
   User, LayoutDashboard, Library, FileText, CalendarDays, ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 import api from '@/lib/axios';
 import Modal from '@/components/shared/Modal';
 import StatCard from '@/components/shared/StatCard';
@@ -197,12 +198,12 @@ export default function StudentDashboard() {
             </h4>
             <div className="space-y-2.5">
               {[
-                { label: 'Digital Library', icon: Library },
-                { label: 'Examination Schedule', icon: CalendarDays },
-                { label: 'Grading Rubric', icon: FileText },
-                { label: 'Holiday Calendar', icon: Calendar },
+                { label: 'Digital Library', icon: Library, href: '/student/resources/library' },
+                { label: 'Examination Schedule', icon: CalendarDays, href: '/student/resources/exams' },
+                { label: 'Grading Rubric', icon: FileText, href: '/student/resources/grading' },
+                { label: 'Holiday Calendar', icon: Calendar, href: '/student/resources/holidays' },
               ].map((item) => (
-                <button key={item.label} className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-blue-50 text-sm font-bold text-primary-700 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100 group">
+                <Link key={item.label} href={item.href} className="w-full flex items-center justify-between p-3.5 rounded-2xl hover:bg-blue-50 text-sm font-bold text-primary-700 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100 group">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-blue-600 transition-colors">
                       <item.icon className="w-4 h-4" />
@@ -210,7 +211,7 @@ export default function StudentDashboard() {
                     {item.label}
                   </div>
                   <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
-                </button>
+                </Link>
               ))}
             </div>
           </div>
