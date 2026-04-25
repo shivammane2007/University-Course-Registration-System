@@ -39,7 +39,7 @@ export default function CoursesPage() {
   const { data: depts = [] } = useQuery({ queryKey: ['depts'], queryFn: fetchDepts });
   const { data: allFaculty = [] } = useQuery({ queryKey: ['all-faculty'], queryFn: fetchFaculties });
 
-  const { register, handleSubmit, reset, watch, control, formState: { errors } } = useForm({ resolver: zodResolver(courseSchema) });
+  const { register, handleSubmit, reset, watch, setValue, control, formState: { errors } } = useForm({ resolver: zodResolver(courseSchema) });
   const mode = watch('mode');
 
   const openAdd = () => { reset({ faculty_ids: [] }); setModal({ open: true, mode: 'add', course: null }); };
@@ -177,13 +177,13 @@ export default function CoursesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="col-span-full">
               <label className="form-label">Course Title</label>
-              <input {...register('course_name')} className="form-input" placeholder="e.g. Advanced Machine Learning" />
+              <input {...register('course_name')} className={errors.course_name ? 'form-input-error' : 'form-input'} placeholder="e.g. Advanced Machine Learning" />
               {errors.course_name && <p className="form-error">{errors.course_name.message}</p>}
             </div>
 
             <div>
               <label className="form-label">Offering Department</label>
-              <select {...register('dept_id')} className="form-select">
+              <select {...register('dept_id')} className={errors.dept_id ? 'form-input-error' : 'form-select'}>
                 <option value="">Select Department</option>
                 {depts.map((d) => <option key={d.dept_id} value={String(d.dept_id)}>{d.dept_name}</option>)}
               </select>
@@ -192,7 +192,7 @@ export default function CoursesPage() {
 
             <div>
               <label className="form-label">Credit Hours / Duration</label>
-              <input {...register('duration')} className="form-input" placeholder="e.g. 4 Credits / 45 Hrs" />
+              <input {...register('duration')} className={errors.duration ? 'form-input-error' : 'form-input'} placeholder="e.g. 4 Credits / 45 Hrs" />
               {errors.duration && <p className="form-error">{errors.duration.message}</p>}
             </div>
 
@@ -217,7 +217,7 @@ export default function CoursesPage() {
 
             <div>
               <label className="form-label">Weekly Schedule</label>
-              <input {...register('timing')} className="form-input" placeholder="e.g. Tue, Thu 09:00 - 11:00" />
+              <input {...register('timing')} className={errors.timing ? 'form-input-error' : 'form-input'} placeholder="e.g. Tue, Thu 09:00 - 11:00" />
               {errors.timing && <p className="form-error">{errors.timing.message}</p>}
             </div>
 
@@ -226,7 +226,7 @@ export default function CoursesPage() {
                 <label className="form-label">Virtual Platform</label>
                 <div className="relative">
                   <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                  <input {...register('platform')} className="form-input pl-10" placeholder="e.g. Microsoft Teams" />
+                  <input {...register('platform')} className={errors.platform ? 'form-input-error pl-10' : 'form-input pl-10'} placeholder="e.g. Microsoft Teams" />
                 </div>
               </div>
             )}
@@ -236,7 +236,7 @@ export default function CoursesPage() {
                 <label className="form-label">Physical Campus / Room</label>
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                  <input {...register('college_name')} className="form-input pl-10" placeholder="e.g. Block C, Room 102" />
+                  <input {...register('college_name')} className={errors.college_name ? 'form-input-error pl-10' : 'form-input pl-10'} placeholder="e.g. Block C, Room 102" />
                 </div>
               </div>
             )}
