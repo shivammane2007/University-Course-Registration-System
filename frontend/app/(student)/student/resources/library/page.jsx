@@ -1,36 +1,39 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Library, Search, Download, Eye, BookOpen, 
   FileText, ArrowLeft, Filter, Bookmark, GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-
-const resources = [
-  { id: 1, title: 'Data Structures Handbook', subject: 'Computer Science', author: 'Dr. Robert Lafore', category: 'Computer Science', type: 'PDF', size: '12.5 MB' },
-  { id: 2, title: 'DBMS Notes - Unit 1 to 5', subject: 'Database Management', author: 'Prof. Amit Shah', category: 'Computer Science', type: 'PDF', size: '4.2 MB' },
-  { id: 3, title: 'Operating Systems Guide', subject: 'Operating Systems', author: 'Silberschatz', category: 'Computer Science', type: 'PDF', size: '18.1 MB' },
-  { id: 4, title: 'Engineering Mathematics II', subject: 'Mathematics', author: 'B.S. Grewal', category: 'Engineering', type: 'PDF', size: '25.0 MB' },
-  { id: 5, title: 'Digital Logic Design', subject: 'Electronics', author: 'Morris Mano', category: 'Electronics', type: 'PDF', size: '8.4 MB' },
-  { id: 6, title: 'Strength of Materials', subject: 'Mechanical', author: 'R.K. Bansal', category: 'Mechanical', type: 'PDF', size: '15.2 MB' },
-  { id: 7, title: 'Modern Management', subject: 'Management', author: 'Samuel Certo', category: 'Management', type: 'PDF', size: '6.8 MB' },
-  { id: 8, title: 'Structural Analysis', subject: 'Civil', author: 'Hibbeler', category: 'Civil', type: 'PDF', size: '21.3 MB' },
-];
+import api from '@/lib/axios';
 
 const categories = ['All', 'Engineering', 'Computer Science', 'Civil', 'Mechanical', 'Electronics', 'Management'];
 
 export default function DigitalLibrary() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('All');
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = resources.filter(r => {
-    const matchesSearch = r.title.toLowerCase().includes(search.toLowerCase()) || 
-                         r.subject.toLowerCase().includes(search.toLowerCase()) ||
-                         r.author.toLowerCase().includes(search.toLowerCase());
-    const matchesTab = activeTab === 'All' || r.category === activeTab;
-    return matchesSearch && matchesTab;
-  });
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get('/api/resources/library', {
+          params: { search, category: activeTab, status: 'Active' }
+        });
+        setResources(res.data.data);
+      } catch (error) {
+        console.error('Failed to fetch library:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const timer = setTimeout(fetchResources, 300);
+    return () => clearTimeout(timer);
+  }, [search, activeTab]);
 
   return (
     <div className="animate-in fade-in duration-700">
@@ -82,7 +85,11 @@ export default function DigitalLibrary() {
       </div>
 
       {/* Resources Grid */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+      ) : resources.length === 0 ? (
         <div className="card h-80 border-none shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
             <Search className="w-8 h-8 text-slate-300" />
@@ -92,7 +99,7 @@ export default function DigitalLibrary() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {filtered.map((r) => (
+          {resources.map((r) => (
             <div key={r.id} className="card group hover:shadow-2xl hover:shadow-blue-500/10 border-slate-100/50 transition-all duration-500 hover:-translate-y-1.5 p-5 flex flex-col relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
               
@@ -101,7 +108,7 @@ export default function DigitalLibrary() {
                   <FileText className="w-6 h-6" />
                 </div>
                 <div className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
-                  {r.type}
+                  {r.category.substring(0, 3).toUpperCase()}
                 </div>
               </div>
 
@@ -118,25 +125,33 @@ export default function DigitalLibrary() {
               </div>
 
               <div className="flex items-center gap-2 pt-4 border-t border-slate-50 mt-auto">
-                <button className="flex-1 btn-secondary h-10 gap-2 text-xs rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-all">
+                <a 
+                  href={r.fileUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex-1 btn-secondary h-10 gap-2 text-xs rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-100 transition-all flex items-center justify-center"
+                >
                   <Eye className="w-3.5 h-3.5" /> View
-                </button>
-                <button className="flex-1 btn-primary h-10 gap-2 text-xs rounded-xl shadow-lg shadow-blue-500/10 transition-all">
+                </a>
+                <a 
+                  href={r.fileUrl} 
+                  download
+                  className="flex-1 btn-primary h-10 gap-2 text-xs rounded-xl shadow-lg shadow-blue-500/10 transition-all flex items-center justify-center"
+                >
                   <Download className="w-3.5 h-3.5" /> Get
-                </button>
+                </a>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Pagination Mock */}
-      <div className="mt-12 flex items-center justify-center gap-2">
-        <button className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-blue-600 border-blue-100 shadow-sm font-bold">
-          1
-        </button>
-        <p className="text-xs font-bold text-slate-400 mx-2 uppercase tracking-widest">Showing {filtered.length} of {resources.length} items</p>
-      </div>
+      {/* Footer info */}
+      {!loading && resources.length > 0 && (
+        <div className="mt-12 flex items-center justify-center">
+          <p className="text-xs font-bold text-slate-400 mx-2 uppercase tracking-widest">Showing {resources.length} resources</p>
+        </div>
+      )}
     </div>
   );
 }

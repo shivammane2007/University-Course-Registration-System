@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Users, UserCheck, BookOpen,
   Building2, ClipboardList, BarChart3, LogOut, GraduationCap,
+  Library, CalendarDays, FileText, Calendar
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
@@ -17,6 +18,10 @@ const links = [
   { href: '/admin/departments', label: 'Departments', icon: Building2 },
   { href: '/admin/enrolments', label: 'Enrolments', icon: ClipboardList },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/admin/resources/library', label: 'Library', icon: BookOpen },
+  { href: '/admin/resources/exams', label: 'Exams', icon: CalendarDays },
+  { href: '/admin/resources/grading', label: 'Grading', icon: FileText },
+  { href: '/admin/resources/holidays', label: 'Holidays', icon: Calendar },
 ];
 
 export default function AdminSidebar() {

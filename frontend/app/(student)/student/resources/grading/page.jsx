@@ -1,13 +1,38 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { 
-  FileText, ArrowLeft, Download, Printer, 
-  CheckCircle2, Info, GraduationCap, BarChart3,
-  Award, Target, ClipboardCheck
+  FileText, ArrowLeft, Info, CheckCircle2, 
+  BarChart3, Scale, GraduationCap, Award 
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import api from '@/lib/axios';
 
 export default function GradingRubric() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGrading = async () => {
+      try {
+        const res = await api.get('/api/resources/grading');
+        setData(res.data.data);
+      } catch (error) {
+        console.error('Failed to fetch grading:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGrading();
+  }, []);
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div></div>;
+  }
+
+  const components = data?.components || [];
+  const gradeScale = data?.scales || [];
+
   return (
     <div className="animate-in fade-in duration-700">
       {/* Header */}
@@ -20,122 +45,129 @@ export default function GradingRubric() {
             <h1 className="text-3xl font-display font-bold text-primary-900 leading-none mb-1.5 tracking-tight">
               Grading Rubric
             </h1>
-            <p className="text-muted font-medium text-sm">Evaluation guidelines and marks distribution system</p>
+            <p className="text-muted font-medium text-sm">Official assessment components and grade scale</p>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button className="btn-secondary h-11 gap-2 shadow-sm rounded-xl">
-            <Printer className="w-4 h-4" /> Print
-          </button>
-          <button className="btn-primary h-11 gap-2 shadow-xl shadow-blue-500/20 rounded-xl">
-            <Download className="w-4 h-4" /> PDF
-          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        {/* Internal Assessment */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="card border-none shadow-xl shadow-slate-200/50 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            
-            <div className="flex items-center gap-3 mb-8 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Assessment Breakdown */}
+        <div className="lg:col-span-2 space-y-8">
+          <div className="card border-none shadow-xl shadow-slate-200/50 p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-8">
               <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                <ClipboardCheck className="w-5 h-5" />
+                <BarChart3 className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-display font-bold text-primary-900">Internal Assessment</h2>
-                <p className="text-xs text-muted font-medium tracking-wide">Continuous Evaluation System (50 Marks Total)</p>
+                <h2 className="text-xl font-display font-bold text-primary-900 leading-tight">Assessment Breakdown</h2>
+                <p className="text-xs text-muted font-medium">Weightage distribution for courses</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-              {[
-                { label: 'Attendance', marks: 10, icon: CheckCircle2, desc: '90% above = 10 marks, 75-89% = 7 marks', color: 'blue' },
-                { label: 'Assignments', marks: 10, icon: FileText, desc: 'Average of best 3 out of 5 assignments', color: 'indigo' },
-                { label: 'Mid-Sem Exam', marks: 30, icon: Target, desc: 'Centralized written examination', color: 'violet' },
-              ].map((item) => (
-                <div key={item.label} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 group hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-300">
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 duration-500",
-                    item.color === 'blue' ? "bg-blue-100 text-blue-600" :
-                    item.color === 'indigo' ? "bg-indigo-100 text-indigo-600" :
-                    "bg-purple-100 text-purple-600"
-                  )}>
-                    <item.icon className="w-5 h-5" />
+            <div className="space-y-6">
+              {components.map((item, idx) => (
+                <div key={idx} className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold text-primary-800">{item.component}</span>
+                    <span className="text-sm font-bold text-blue-600">{item.marks} Marks</span>
                   </div>
-                  <h4 className="font-bold text-primary-900 mb-1">{item.label}</h4>
-                  <p className="text-3xl font-display font-bold text-slate-800 mb-2">{item.marks} <span className="text-sm font-medium text-slate-400">marks</span></p>
-                  <p className="text-[10px] text-muted font-bold leading-relaxed tracking-wider uppercase">{item.desc}</p>
+                  <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-600 rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${item.marks}%`, transitionDelay: `${idx * 100}ms` }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
+
+            <div className="mt-10 p-5 rounded-2xl bg-blue-600 text-white flex items-center justify-between shadow-lg shadow-blue-500/20">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">Total Marks</p>
+                  <p className="text-2xl font-display font-bold leading-tight">100 Percent</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-medium opacity-80">Final Grade</p>
+                <p className="text-lg font-bold">Sum of all parts</p>
+              </div>
+            </div>
           </div>
 
-          <div className="card border-none shadow-xl shadow-slate-200/50 bg-gradient-to-br from-blue-600 to-indigo-700 text-white relative overflow-hidden group">
-             <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-1000" />
-             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-               <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-blue-200 backdrop-blur-md">
-                      <GraduationCap className="w-5 h-5" />
-                    </div>
-                    <h2 className="text-xl font-display font-bold">End Semester Examination</h2>
-                  </div>
-                  <p className="text-blue-100 text-sm max-w-sm">
-                    Final summative assessment covering the entire syllabus. Minimum 40% marks required for passing.
-                  </p>
-               </div>
-               <div className="flex items-baseline gap-2">
-                 <span className="text-6xl font-display font-bold">50</span>
-                 <span className="text-xl font-bold text-blue-200">MARKS</span>
-               </div>
+          <div className="card border-none shadow-xl shadow-slate-200/50 p-6 sm:p-8 bg-slate-900 text-white relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+             <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <Info className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-lg font-bold">Important Notes</h3>
+                </div>
+                <ul className="space-y-4">
+                  {[
+                    "Students must maintain minimum 75% attendance to qualify for End Sem exams.",
+                    "Internal marks are non-negotiable and based on consistent performance.",
+                    "Mid Sem exams are mandatory; absence requires official medical proof.",
+                    "Practical evaluations happen throughout the semester during lab sessions."
+                  ].map((note, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-slate-400 leading-relaxed">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                      {note}
+                    </li>
+                  ))}
+                </ul>
              </div>
           </div>
         </div>
 
-        {/* Grade Scale */}
-        <div className="card border-none shadow-xl shadow-slate-200/50 p-0 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-              <BarChart3 className="w-4 h-4" />
-            </div>
-            <h3 className="font-bold text-primary-900">Grade Scale (10 Points)</h3>
-          </div>
-          
-          <div className="p-2">
-            {[
-              { grade: 'O', range: '90 - 100', label: 'Outstanding', color: 'bg-green-500' },
-              { grade: 'A+', range: '80 - 89', label: 'Excellent', color: 'bg-green-400' },
-              { grade: 'A', range: '70 - 79', label: 'Very Good', color: 'bg-blue-400' },
-              { grade: 'B+', range: '60 - 69', label: 'Good', color: 'bg-blue-300' },
-              { grade: 'B', range: '50 - 59', label: 'Above Average', color: 'bg-yellow-400' },
-              { grade: 'C', range: '40 - 49', label: 'Average', color: 'bg-orange-400' },
-              { grade: 'F', range: 'Below 40', label: 'Fail', color: 'bg-red-500' },
-            ].map((item) => (
-              <div key={item.grade} className="flex items-center justify-between p-3.5 hover:bg-slate-50 rounded-xl transition-colors group">
-                <div className="flex items-center gap-4">
-                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-white font-display font-bold text-lg shadow-sm group-hover:scale-110 transition-transform duration-300", item.color)}>
-                    {item.grade}
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-primary-900 leading-tight">{item.label}</p>
-                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest">{item.range} %</p>
-                  </div>
+        {/* Right Column: Grade Scale */}
+        <div className="space-y-8">
+           <div className="card border-none shadow-xl shadow-slate-200/50 p-6 sm:p-8 sticky top-6">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <Award className="w-5 h-5" />
                 </div>
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-blue-400 transition-colors" />
+                <div>
+                  <h2 className="text-xl font-display font-bold text-primary-900 leading-tight">Grade Scale</h2>
+                  <p className="text-xs text-muted font-medium">10 Point CGPA System</p>
+                </div>
               </div>
-            ))}
-          </div>
 
-          <div className="p-5 bg-slate-50 border-t border-slate-100">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-muted uppercase tracking-widest">
-              <Info className="w-3.5 h-3.5 text-blue-500" /> CGPA Calculation
-            </div>
-            <p className="text-[11px] text-slate-500 mt-1.5 font-medium leading-relaxed">
-              CGPA is the weighted average of Grade Points obtained in all courses in all semesters.
-            </p>
-          </div>
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 pb-3 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <span>Grade</span>
+                  <span className="text-center">Range %</span>
+                  <span className="text-right">GPA</span>
+                </div>
+                {gradeScale.map((g) => (
+                  <div key={g.id} className="grid grid-cols-3 py-3 border-b border-slate-50 last:border-0 items-center group">
+                    <span className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all",
+                      g.gpa >= 9 ? "bg-green-50 text-green-600 border border-green-100" :
+                      g.gpa >= 7 ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                      g.gpa >= 5 ? "bg-orange-50 text-orange-600 border border-orange-100" :
+                      "bg-red-50 text-red-600 border border-red-100"
+                    )}>
+                      {g.grade}
+                    </span>
+                    <span className="text-sm font-bold text-slate-600 text-center">{g.minPercent} - {g.maxPercent}</span>
+                    <span className="text-sm font-bold text-primary-900 text-right">{g.gpa.toFixed(1)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <Scale className="w-4 h-4 text-slate-400" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Formula</p>
+                </div>
+                <p className="text-[11px] text-muted leading-relaxed font-medium">
+                  SGPA = Σ(Credits × Grade Points) / Σ(Credits)
+                </p>
+              </div>
+           </div>
         </div>
       </div>
     </div>

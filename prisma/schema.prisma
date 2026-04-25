@@ -137,3 +137,61 @@ enum EnrolmentStatus {
   Approved
   Dropped
 }
+
+model LibraryResource {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  subject     String   @db.VarChar(100)
+  author      String   @db.VarChar(100)
+  category    String   @db.VarChar(100)
+  description String?  @db.Text
+  fileUrl     String   @db.VarChar(500)
+  status      String   @default("Active") @db.VarChar(20)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("library_resources")
+}
+
+model ExamSchedule {
+  id          Int      @id @default(autoincrement())
+  subjectCode String   @db.VarChar(50)
+  subjectName String   @db.VarChar(150)
+  semester    String   @db.VarChar(50)
+  examDate    DateTime @db.Date
+  startTime   String   @db.VarChar(50)
+  duration    String   @db.VarChar(50)
+  hall        String   @db.VarChar(100)
+  status      String   @default("Upcoming") @db.VarChar(20)
+
+  @@map("exam_schedules")
+}
+
+model GradingRubric {
+  id        Int    @id @default(autoincrement())
+  component String @db.VarChar(100)
+  marks     Int
+
+  @@map("grading_rubrics")
+}
+
+model GradeScale {
+  id         Int    @id @default(autoincrement())
+  grade      String @db.VarChar(10)
+  minPercent Int
+  maxPercent Int
+  gpa        Float
+
+  @@map("grade_scales")
+}
+
+model Holiday {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(150)
+  date        DateTime @db.Date
+  type        String   @db.VarChar(50)
+  description String?  @db.Text
+  status      String   @default("Active") @db.VarChar(20)
+
+  @@map("holidays")
+}
