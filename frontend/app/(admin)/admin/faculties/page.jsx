@@ -11,18 +11,25 @@ import DataTable from '@/components/shared/DataTable';
 import Modal from '@/components/shared/Modal';
 import PageHeader from '@/components/shared/PageHeader';
 
+import { 
+  nameRegex, 
+  numberRegex, 
+  validatePhone, 
+  validatePasswordStrength 
+} from '@/lib/validators';
+
 const schema = z.object({
-  first_name: z.string().min(1, 'Required'),
-  last_name: z.string().min(1, 'Required'),
-  user_id: z.string().min(1, 'Required'),
+  first_name: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
+  last_name: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
+  user_id: z.string().min(1, 'Required').regex(numberRegex, 'Only numbers allowed'),
   dob: z.string().min(1, 'Required'),
   gender: z.enum(['Male', 'Female', 'Other']),
   address: z.string().min(1, 'Required'),
   domain: z.string().min(1, 'Required'),
   designation: z.string().min(1, 'Required'),
-  contact_no: z.string().min(10, 'Required'),
+  contact_no: z.string().refine(validatePhone, 'Contact must be exactly 10 digits'),
   dept_id: z.string().min(1, 'Required'),
-  password: z.string().optional(),
+  password: z.string().optional().refine((val) => !val || validatePasswordStrength(val), 'Choose stronger password'),
 });
 
 const fetchFaculties = ({ page, search }) =>
@@ -42,7 +49,10 @@ export default function FacultiesPage() {
   });
   const { data: depts = [] } = useQuery({ queryKey: ['depts'], queryFn: fetchDepts });
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({ 
+    resolver: zodResolver(schema),
+    mode: 'onBlur'
+  });
 
   const openAdd = () => { reset({}); setModal({ open: true, mode: 'add', faculty: null }); };
   const openEdit = (f) => {
@@ -80,6 +90,15 @@ export default function FacultiesPage() {
   };
 
   const handleSearch = useCallback((val) => { setSearch(val); setPage(1); }, []);
+
+  const handleInputSanitize = (e, pattern) => {
+    const val = e.target.value;
+    const sanitized = val.replace(pattern, '');
+    if (val !== sanitized) {
+      e.target.value = sanitized;
+      setValue(e.target.id, sanitized, { shouldValidate: true });
+    }
+  };
 
   const columns = [
     { 
@@ -156,12 +175,22 @@ export default function FacultiesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="form-label">First Name</label>
-                <input {...register('first_name')} className="form-input" />
+                <input 
+                  id="first_name"
+                  {...register('first_name')} 
+                  className={errors.first_name ? "form-input-error" : "form-input"} 
+                  onChange={(e) => { handleInputSanitize(e, /[^A-Za-z ]/g); register('first_name').onChange(e); }}
+                />
                 {errors.first_name && <p className="form-error">{errors.first_name.message}</p>}
               </div>
               <div>
                 <label className="form-label">Last Name</label>
-                <input {...register('last_name')} className="form-input" />
+                <input 
+                  id="last_name"
+                  {...register('last_name')} 
+                  className={errors.last_name ? "form-input-error" : "form-input"} 
+                  onChange={(e) => { handleInputSanitize(e, /[^A-Za-z ]/g); register('last_name').onChange(e); }}
+                />
                 {errors.last_name && <p className="form-error">{errors.last_name.message}</p>}
               </div>
             </div>
@@ -170,12 +199,22 @@ export default function FacultiesPage() {
           <div className="space-y-4">
             <div>
               <label className="form-label">Faculty ID / Username</label>
-              <input {...register('user_id')} className="form-input" />
+              <input 
+                id="user_id"
+                {...register('user_id')} 
+                className={errors.user_id ? "form-input-error" : "form-input"} 
+                onChange={(e) => { handleInputSanitize(e, /[^0-9]/g); register('user_id').onChange(e); }}
+              />
               {errors.user_id && <p className="form-error">{errors.user_id.message}</p>}
             </div>
             <div>
               <label className="form-label">Contact Number</label>
-              <input {...register('contact_no')} className="form-input" />
+              <input 
+                id="contact_no"
+                {...register('contact_no')} 
+                className={errors.contact_no ? "form-input-error" : "form-input"} 
+                onChange={(e) => { handleInputSanitize(e, /[^0-9]/g); register('contact_no').onChange(e); }}
+              />
               {errors.contact_no && <p className="form-error">{errors.contact_no.message}</p>}
             </div>
           </div>
@@ -183,12 +222,12 @@ export default function FacultiesPage() {
           <div className="space-y-4">
             <div>
               <label className="form-label">Designation</label>
-              <input {...register('designation')} className="form-input" placeholder="e.g. Associate Professor" />
+              <input {...register('designation')} className={errors.designation ? "form-input-error" : "form-input"} placeholder="e.g. Associate Professor" />
               {errors.designation && <p className="form-error">{errors.designation.message}</p>}
             </div>
             <div>
               <label className="form-label">Academic Domain</label>
-              <input {...register('domain')} className="form-input" placeholder="e.g. Quantum Computing" />
+              <input {...register('domain')} className={errors.domain ? "form-input-error" : "form-input"} placeholder="e.g. Quantum Computing" />
               {errors.domain && <p className="form-error">{errors.domain.message}</p>}
             </div>
           </div>
@@ -198,7 +237,7 @@ export default function FacultiesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="form-label">Department</label>
-                <select {...register('dept_id')} className="form-select">
+                <select {...register('dept_id')} className={errors.dept_id ? "form-input-error" : "form-select"}>
                   <option value="">Select Department</option>
                   {depts.map((d) => <option key={d.dept_id} value={String(d.dept_id)}>{d.dept_name}</option>)}
                 </select>
@@ -206,12 +245,21 @@ export default function FacultiesPage() {
               </div>
               <div>
                 <label className="form-label">System Password</label>
-                <input {...register('password')} type="password" placeholder="••••••••" className="form-input" autoComplete="new-password" />
+                <input 
+                  id="password"
+                  {...register('password')} 
+                  type="password" 
+                  placeholder="••••••••" 
+                  className={errors.password ? "form-input-error" : "form-input"} 
+                  autoComplete="new-password" 
+                />
+                {errors.password && <p className="form-error">{errors.password.message}</p>}
               </div>
             </div>
           </div>
         </div>
       </Modal>
+
 
       <Modal open={deleteModal.open} onClose={() => setDeleteModal({ open: false })} title="Remove Faculty Member"
         footer={

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -11,18 +11,27 @@ import DataTable from '@/components/shared/DataTable';
 import Modal from '@/components/shared/Modal';
 import PageHeader from '@/components/shared/PageHeader';
 
+import { 
+  nameRegex, 
+  numberRegex, 
+  validatePhone, 
+  validatePincode, 
+  validateYear, 
+  validatePasswordStrength 
+} from '@/lib/validators';
+
 const studentSchema = z.object({
-  first_name: z.string().min(1, 'Required'),
-  last_name: z.string().min(1, 'Required'),
-  user_id: z.string().min(1, 'PRN No required'),
-  password: z.string().optional(),
+  first_name: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
+  last_name: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
+  user_id: z.string().min(1, 'PRN No required').regex(numberRegex, 'Only numbers allowed'),
+  password: z.string().optional().refine((val) => !val || validatePasswordStrength(val), 'Choose stronger password'),
   dob: z.string().min(1, 'Required'),
   gender: z.enum(['Male', 'Female', 'Other']),
-  phone_no: z.string().min(10, 'Valid phone required'),
-  city: z.string().min(1, 'Required'),
-  state: z.string().min(1, 'Required'),
-  pincode: z.string().min(6, 'Required'),
-  year_enrolled: z.string().min(4, 'Required'),
+  phone_no: z.string().refine(validatePhone, 'Phone must be exactly 10 digits'),
+  city: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
+  state: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
+  pincode: z.string().refine(validatePincode, 'Pincode must be exactly 6 digits'),
+  year_enrolled: z.string().refine(validateYear, 'Year must be 4 digits (2000-current+1)'),
   dept_id: z.string().min(1, 'Required'),
 });
 
@@ -43,8 +52,9 @@ export default function StudentsPage() {
   });
   const { data: depts = [] } = useQuery({ queryKey: ['depts'], queryFn: fetchDepts });
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(studentSchema),
+    mode: 'onBlur'
   });
 
   const openAdd = () => { reset({}); setModal({ open: true, mode: 'add', student: null }); };
@@ -111,21 +121,39 @@ export default function StudentsPage() {
     },
   ];
 
+  const handleInputSanitize = (e, pattern) => {
+    const val = e.target.value;
+    const sanitized = val.replace(pattern, '');
+    if (val !== sanitized) {
+      e.target.value = sanitized;
+      setValue(e.target.id, sanitized, { shouldValidate: true });
+    }
+  };
+
   const FormFields = () => (
     <div className="grid grid-cols-2 gap-4">
       {[
-        { id: 'first_name', label: 'First Name' },
-        { id: 'last_name', label: 'Last Name' },
-        { id: 'user_id', label: 'PRN No' },
-        { id: 'phone_no', label: 'Phone No' },
-        { id: 'city', label: 'City' },
-        { id: 'state', label: 'State' },
-        { id: 'pincode', label: 'Pincode' },
-        { id: 'year_enrolled', label: 'Year Enrolled', type: 'number' },
-      ].map(({ id, label, type = 'text' }) => (
+        { id: 'first_name', label: 'First Name', sanitize: /[^A-Za-z ]/g },
+        { id: 'last_name', label: 'Last Name', sanitize: /[^A-Za-z ]/g },
+        { id: 'user_id', label: 'PRN No', sanitize: /[^0-9]/g },
+        { id: 'phone_no', label: 'Phone No', sanitize: /[^0-9]/g },
+        { id: 'city', label: 'City', sanitize: /[^A-Za-z ]/g },
+        { id: 'state', label: 'State', sanitize: /[^A-Za-z ]/g },
+        { id: 'pincode', label: 'Pincode', sanitize: /[^0-9]/g },
+        { id: 'year_enrolled', label: 'Year Enrolled', type: 'text', sanitize: /[^0-9]/g },
+      ].map(({ id, label, type = 'text', sanitize }) => (
         <div key={id}>
           <label className="form-label">{label}</label>
-          <input {...register(id)} type={type} className={errors[id] ? 'form-input-error' : 'form-input'} id={id} />
+          <input 
+            {...register(id)} 
+            type={type} 
+            className={errors[id] ? 'form-input-error' : 'form-input'} 
+            id={id}
+            onChange={(e) => {
+              if (sanitize) handleInputSanitize(e, sanitize);
+              register(id).onChange(e);
+            }}
+          />
           {errors[id] && <p className="form-error">{errors[id].message}</p>}
         </div>
       ))}
@@ -152,10 +180,18 @@ export default function StudentsPage() {
       </div>
       <div>
         <label className="form-label">Password {modal.mode === 'edit' && <span className="text-muted">(leave blank to keep)</span>}</label>
-        <input {...register('password')} type="password" className="form-input" id="password" autoComplete="new-password" />
+        <input 
+          {...register('password')} 
+          type="password" 
+          className={errors.password ? 'form-input-error' : 'form-input'} 
+          id="password" 
+          autoComplete="new-password" 
+        />
+        {errors.password && <p className="form-error">{errors.password.message}</p>}
       </div>
     </div>
   );
+
 
   return (
     <div className="pt-6">

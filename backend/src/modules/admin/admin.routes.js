@@ -2,6 +2,7 @@ const { Router } = require('express');
 const ctrl = require('./admin.controller');
 const verifyToken = require('../../middleware/auth');
 const requireRole = require('../../middleware/role');
+const { validateStudent, validateFaculty, validateDepartment } = require('../../middleware/validation');
 
 const router = Router();
 router.use(verifyToken, requireRole('admin'));
@@ -11,14 +12,14 @@ router.get('/dashboard/stats', ctrl.getDashboardStats);
 
 // Students
 router.get('/students', ctrl.getStudents);
-router.post('/students', ctrl.createStudent);
-router.put('/students/:id', ctrl.updateStudent);
+router.post('/students', validateStudent, ctrl.createStudent);
+router.put('/students/:id', validateStudent, ctrl.updateStudent);
 router.delete('/students/:id', ctrl.deleteStudent);
 
 // Faculty
 router.get('/faculties', ctrl.getFaculties);
-router.post('/faculties', ctrl.createFaculty);
-router.put('/faculties/:id', ctrl.updateFaculty);
+router.post('/faculties', validateFaculty, ctrl.createFaculty);
+router.put('/faculties/:id', validateFaculty, ctrl.updateFaculty);
 router.delete('/faculties/:id', ctrl.deleteFaculty);
 
 // Courses
@@ -30,8 +31,8 @@ router.post('/courses/:id/assign-faculty', ctrl.assignFaculty);
 
 // Departments
 router.get('/departments', ctrl.getDepartments);
-router.post('/departments', ctrl.createDepartment);
-router.put('/departments/:id', ctrl.updateDepartment);
+router.post('/departments', validateDepartment, ctrl.createDepartment);
+router.put('/departments/:id', validateDepartment, ctrl.updateDepartment);
 router.delete('/departments/:id', ctrl.deleteDepartment);
 
 // Enrolments

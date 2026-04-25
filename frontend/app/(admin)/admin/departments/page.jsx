@@ -1,12 +1,19 @@
-﻿'use client';
+'use client';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import Modal from '@/components/shared/Modal';
 import PageHeader from '@/components/shared/PageHeader';
+import { nameRegex } from '@/lib/validators';
+
+const deptSchema = z.object({
+  dept_name: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
+});
 
 const fetchDepts = () => api.get('/admin/departments').then((r) => r.data.data);
 
@@ -16,7 +23,10 @@ export default function DepartmentsPage() {
   const [deleteModal, setDeleteModal] = useState({ open: false, dept: null });
   const { data: depts = [], isLoading } = useQuery({ queryKey: ['depts'], queryFn: fetchDepts });
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
+    resolver: zodResolver(deptSchema),
+    mode: 'onBlur'
+  });
 
   const openAdd = () => { reset({ dept_name: '' }); setModal({ open: true, mode: 'add', dept: null }); };
   const openEdit = (d) => { reset({ dept_name: d.dept_name }); setModal({ open: true, mode: 'edit', dept: d }); };
@@ -41,6 +51,16 @@ export default function DepartmentsPage() {
     if (modal.mode === 'add') createMut.mutate({ dept_name });
     else updateMut.mutate({ id: modal.dept.dept_id, data: { dept_name } });
   };
+
+  const handleInputSanitize = (e, pattern) => {
+    const val = e.target.value;
+    const sanitized = val.replace(pattern, '');
+    if (val !== sanitized) {
+      e.target.value = sanitized;
+      setValue('dept_name', sanitized, { shouldValidate: true });
+    }
+  };
+
 
   return (
     <div className="pt-6">
@@ -96,7 +116,13 @@ export default function DepartmentsPage() {
       >
         <div>
           <label className="form-label">Department Name</label>
-          <input {...register('dept_name', { required: 'Required' })} className={errors.dept_name ? 'form-input-error' : 'form-input'} id="dept_name" placeholder="e.g. Computer Science" />
+          <input 
+            {...register('dept_name')} 
+            className={errors.dept_name ? 'form-input-error' : 'form-input'} 
+            id="dept_name" 
+            placeholder="e.g. Computer Science" 
+            onChange={(e) => { handleInputSanitize(e, /[^A-Za-z ]/g); register('dept_name').onChange(e); }}
+          />
           {errors.dept_name && <p className="form-error">{errors.dept_name.message}</p>}
         </div>
       </Modal>
