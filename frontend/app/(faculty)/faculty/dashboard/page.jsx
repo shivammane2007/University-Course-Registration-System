@@ -8,7 +8,7 @@ import {
 import Link from 'next/link';
 import api from '@/lib/axios';
 import StatCard from '@/components/shared/StatCard';
-import Badge from '@/components/shared/Badge';
+import DataTable from '@/components/shared/DataTable';
 
 const fetchProfile = () => api.get('/faculty/profile').then((r) => r.data.data);
 const fetchCourses = () => api.get('/faculty/courses').then((r) => r.data.data);
@@ -69,40 +69,23 @@ export default function FacultyDashboard() {
               All Courses <ArrowUpRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="table-wrapper">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Course Name</th>
-                  <th>Mode</th>
-                  <th>Students</th>
-                  <th>Timing</th>
-                </tr>
-              </thead>
-              <tbody>
-                {courses.map((course) => (
-                  <tr key={course.course_id}>
-                    <td className="font-bold text-primary-900">{course.course_name}</td>
-                    <td>
-                      <span className={`badge ${course.mode === 'Online' ? 'badge-online' : 'badge-offline'}`}>
-                        {course.mode}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <Users className="w-3 h-3 text-muted" />
-                        <span className="font-medium">{course._count?.enrolments || 0}</span>
-                      </div>
-                    </td>
-                    <td className="text-muted font-mono text-xs">{course.timing}</td>
-                  </tr>
-                ))}
-                {courses.length === 0 && (
-                  <tr><td colSpan={4} className="text-center py-12 text-muted">No courses assigned yet</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          
+          <DataTable
+            columns={[
+              { key: 'course_name', label: 'Course Name', render: (v) => <span className="font-bold text-primary-900">{v}</span> },
+              { key: 'mode', label: 'Mode' },
+              { key: 'students', label: 'Students', render: (_, r) => (
+                <div className="flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="font-bold text-slate-700">{r._count?.enrolments || 0}</span>
+                </div>
+              )},
+              { key: 'timing', label: 'Timing', render: (v) => <span className="text-xs font-mono text-slate-500">{v}</span> },
+            ]}
+            data={courses}
+            loading={coursesLoading}
+            detailTitle="Course Information"
+          />
         </div>
 
         {/* Sidebar Widgets */}

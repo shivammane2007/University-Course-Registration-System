@@ -21,15 +21,28 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [rememberMe, setRememberMe] = useState(typeof window !== 'undefined' && !!localStorage.getItem('usrs_remember_id'));
+  const [rememberMe, setRememberMe] = useState(false);
 
   const { register, handleSubmit, watch, setValue, clearErrors, formState: { errors } } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: { 
-      role: (typeof window !== 'undefined' && localStorage.getItem('usrs_remember_role')) || 'student',
-      user_id: (typeof window !== 'undefined' && localStorage.getItem('usrs_remember_id')) || ''
+      role: 'student',
+      user_id: ''
     }
   });
+
+  // Load remembered credentials on mount to avoid hydration mismatch
+  useEffect(() => {
+    const savedId = localStorage.getItem('usrs_remember_id');
+    const savedRole = localStorage.getItem('usrs_remember_role');
+    if (savedId) {
+      setValue('user_id', savedId);
+      setRememberMe(true);
+    }
+    if (savedRole) {
+      setValue('role', savedRole);
+    }
+  }, [setValue]);
 
   const selectedRole = watch('role');
 

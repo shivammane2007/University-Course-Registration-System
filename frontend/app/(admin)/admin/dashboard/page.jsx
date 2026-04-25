@@ -7,7 +7,7 @@ import {
 import Link from 'next/link';
 import api from '@/lib/axios';
 import StatCard from '@/components/shared/StatCard';
-import Badge from '@/components/shared/Badge';
+import DataTable from '@/components/shared/DataTable';
 
 const fetchStats = () => api.get('/admin/dashboard/stats').then((r) => r.data.data);
 
@@ -71,7 +71,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Enrolments */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-display font-bold text-primary-900">Recent Enrolments</h2>
@@ -79,36 +78,27 @@ export default function AdminDashboard() {
               View All <ArrowUpRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="table-wrapper">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Course</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats?.recentEnrolments?.map((en) => (
-                  <tr key={en.enrolment_id}>
-                    <td>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-primary-900">{en.student?.first_name} {en.student?.last_name}</span>
-                        <span className="text-[10px] text-muted font-mono">{en.student?.user_id}</span>
-                      </div>
-                    </td>
-                    <td>{en.course?.course_name}</td>
-                    <td className="text-muted">{new Date(en.enrolled_at).toLocaleDateString()}</td>
-                    <td><Badge status={en.status} /></td>
-                  </tr>
-                ))}
-                {(!stats?.recentEnrolments || stats.recentEnrolments.length === 0) && (
-                  <tr><td colSpan={4} className="text-center py-12 text-muted italic">No recent enrolments found</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+
+          <DataTable
+            columns={[
+              { 
+                key: 'student', 
+                label: 'Student', 
+                render: (_, en) => (
+                  <div className="flex flex-col">
+                    <span className="font-bold text-primary-900">{en.student?.first_name} {en.student?.last_name}</span>
+                    <span className="text-[10px] text-muted font-mono">#{en.student?.user_id}</span>
+                  </div>
+                )
+              },
+              { key: 'course', label: 'Course', render: (_, en) => <span className="font-medium text-slate-700">{en.course?.course_name}</span> },
+              { key: 'date', label: 'Enrolled Date', render: (_, en) => <span className="text-xs text-slate-500">{new Date(en.enrolled_at).toLocaleDateString()}</span> },
+              { key: 'status', label: 'Status' },
+            ]}
+            data={stats?.recentEnrolments || []}
+            loading={isLoading}
+            detailTitle="Enrolment Specifics"
+          />
         </div>
 
         {/* Quick Actions / System Status */}

@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import Modal from '@/components/shared/Modal';
 import PageHeader from '@/components/shared/PageHeader';
+import DataTable from '@/components/shared/DataTable';
 import { nameRegex } from '@/lib/validators';
 
 const deptSchema = z.object({
@@ -62,46 +63,36 @@ export default function DepartmentsPage() {
   };
 
 
+  const columns = [
+    { key: 'dept_id', label: 'ID', render: (v) => <span className="text-muted">#{v}</span> },
+    { key: 'dept_name', label: 'Department Name', render: (v) => <span className="font-bold text-primary-900">{v}</span> },
+    { 
+      key: 'actions', 
+      label: 'Actions', 
+      render: (_, d) => (
+        <div className="flex items-center gap-2">
+          <button onClick={() => openEdit(d)} className="btn-ghost btn-sm btn-icon text-accent"><Pencil className="w-3.5 h-3.5" /></button>
+          <button onClick={() => setDeleteModal({ open: true, dept: d })} className="btn-ghost btn-sm btn-icon text-danger"><Trash2 className="w-3.5 h-3.5" /></button>
+        </div>
+      )
+    },
+  ];
+
   return (
     <div className="pt-6">
       <PageHeader
         title="Departments"
-        subtitle={`${depts.length} departments`}
+        subtitle={`${depts.length} active departments`}
         action={<button onClick={openAdd} className="btn-primary btn-sm" id="add-dept-btn"><Plus className="w-3.5 h-3.5" />Add Department</button>}
       />
 
       <div className="card">
-        <div className="table-wrapper">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Department Name</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i}>{[1, 2, 3].map((j) => <td key={j}><div className="skeleton h-4 rounded w-3/4" /></td>)}</tr>
-                ))
-              ) : depts.length === 0 ? (
-                <tr><td colSpan={3} className="text-center py-8 text-muted">No departments yet</td></tr>
-              ) : depts.map((d) => (
-                <tr key={d.dept_id}>
-                  <td className="text-muted">#{d.dept_id}</td>
-                  <td className="font-medium">{d.dept_name}</td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => openEdit(d)} className="btn-ghost btn-sm btn-icon text-accent"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => setDeleteModal({ open: true, dept: d })} className="btn-ghost btn-sm btn-icon text-danger"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns}
+          data={depts}
+          loading={isLoading}
+          detailTitle="Department Details"
+        />
       </div>
 
       <Modal open={modal.open} onClose={() => setModal({ open: false })} title={modal.mode === 'add' ? 'Add Department' : 'Edit Department'}
