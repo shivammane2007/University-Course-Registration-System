@@ -196,10 +196,27 @@ const getDepartments = async () => {
 };
 
 const createDepartment = async (dept_name) => {
+  const existing = await prisma.department.findFirst({ where: { dept_name } });
+  if (existing) {
+    const error = new Error('Department with this name already exists');
+    error.statusCode = 400;
+    throw error;
+  }
   return prisma.department.create({ data: { dept_name } });
 };
 
 const updateDepartment = async (id, dept_name) => {
+  const existing = await prisma.department.findFirst({
+    where: { 
+      dept_name,
+      NOT: { dept_id: Number(id) }
+    }
+  });
+  if (existing) {
+    const error = new Error('Department with this name already exists');
+    error.statusCode = 400;
+    throw error;
+  }
   return prisma.department.update({ where: { dept_id: Number(id) }, data: { dept_name } });
 };
 
