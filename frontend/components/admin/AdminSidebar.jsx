@@ -30,8 +30,7 @@ export default function AdminSidebar() {
   const { user, logout } = useAuthStore();
 
   const handleLogout = async () => {
-    try { await api.post('/auth/logout'); } catch {}
-    logout();
+    await logout();
     toast.success('Logged out');
     router.push('/login');
   };

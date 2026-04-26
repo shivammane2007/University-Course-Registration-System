@@ -3,12 +3,17 @@ const { sendError } = require('../utils/apiResponse');
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
+  let token;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return sendError(res, 'Access denied. No token provided.', [], 401);
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.cookies && req.cookies.accessToken) {
+    token = req.cookies.accessToken;
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return sendError(res, 'Access denied. No token provided.', [], 401);
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
