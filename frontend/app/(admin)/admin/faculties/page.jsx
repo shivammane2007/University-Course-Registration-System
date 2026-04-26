@@ -212,6 +212,7 @@ export default function FacultiesPage() {
               <input 
                 id="contact_no"
                 {...register('contact_no')} 
+                maxLength={10}
                 className={errors.contact_no ? "form-input-error" : "form-input"} 
                 onChange={(e) => { handleInputSanitize(e, /[^0-9]/g); register('contact_no').onChange(e); }}
               />

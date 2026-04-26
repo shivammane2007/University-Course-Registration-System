@@ -1,6 +1,7 @@
 const { sendError } = require('../utils/apiResponse');
 
 const nameRegex = /^[A-Za-z ]+$/;
+const strictNameRegex = /^[A-Za-z]+$/;
 const numberRegex = /^[0-9]+$/;
 
 const validatePasswordStrength = (val) => {
@@ -20,9 +21,17 @@ const validatePasswordStrength = (val) => {
 const validateStudent = (req, res, next) => {
   const { first_name, last_name, user_id, phone_no, city, state, pincode, year_enrolled, password } = req.body;
 
-  if (!nameRegex.test(first_name)) return sendError(res, 'Invalid first name: Only alphabets allowed', [], 400);
-  if (!nameRegex.test(last_name)) return sendError(res, 'Invalid last name: Only alphabets allowed', [], 400);
-  if (!numberRegex.test(user_id)) return sendError(res, 'Invalid PRN: Only numbers allowed', [], 400);
+  if (!first_name) return sendError(res, 'First name is required', [], 400);
+  if (!strictNameRegex.test(first_name)) return sendError(res, 'Only alphabets allowed', [], 400);
+  if (first_name.length < 2) return sendError(res, 'Minimum 2 letters required', [], 400);
+
+  if (!last_name) return sendError(res, 'Last name is required', [], 400);
+  if (!strictNameRegex.test(last_name)) return sendError(res, 'Only alphabets allowed', [], 400);
+  if (last_name.length < 2) return sendError(res, 'Minimum 2 letters required', [], 400);
+
+  if (!user_id) return sendError(res, 'PRN number is required', [], 400);
+  if (!numberRegex.test(user_id)) return sendError(res, 'PRN must contain numbers only', [], 400);
+  if (user_id.length !== 8) return sendError(res, 'PRN must be exactly 8 digits', [], 400);
   if (phone_no.length !== 10 || !numberRegex.test(phone_no)) return sendError(res, 'Invalid phone number: Must be 10 digits', [], 400);
   if (!nameRegex.test(city)) return sendError(res, 'Invalid city: Only alphabets allowed', [], 400);
   if (!nameRegex.test(state)) return sendError(res, 'Invalid state: Only alphabets allowed', [], 400);

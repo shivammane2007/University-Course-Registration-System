@@ -21,9 +21,18 @@ import {
 } from '@/lib/validators';
 
 const studentSchema = z.object({
-  first_name: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
-  last_name: z.string().min(1, 'Required').regex(nameRegex, 'Only alphabets allowed'),
-  user_id: z.string().min(1, 'PRN No required').regex(numberRegex, 'Only numbers allowed'),
+  first_name: z.string()
+    .min(1, 'First name is required')
+    .min(2, 'Minimum 2 letters required')
+    .regex(/^[A-Za-z]+$/, 'Only alphabets allowed'),
+  last_name: z.string()
+    .min(1, 'Last name is required')
+    .min(2, 'Minimum 2 letters required')
+    .regex(/^[A-Za-z]+$/, 'Only alphabets allowed'),
+  user_id: z.string()
+    .min(1, 'PRN number is required')
+    .regex(/^[0-9]+$/, 'PRN must contain numbers only')
+    .length(8, 'PRN must be exactly 8 digits'),
   password: z.string().optional().refine((val) => !val || validatePasswordStrength(val), 'Choose stronger password'),
   dob: z.string().min(1, 'Required'),
   gender: z.enum(['Male', 'Female', 'Other']),
@@ -133,20 +142,21 @@ export default function StudentsPage() {
   const FormFields = () => (
     <div className="grid grid-cols-2 gap-4">
       {[
-        { id: 'first_name', label: 'First Name', sanitize: /[^A-Za-z ]/g },
-        { id: 'last_name', label: 'Last Name', sanitize: /[^A-Za-z ]/g },
-        { id: 'user_id', label: 'PRN No', sanitize: /[^0-9]/g },
-        { id: 'phone_no', label: 'Phone No', sanitize: /[^0-9]/g },
+        { id: 'first_name', label: 'First Name', sanitize: /[^A-Za-z]/g },
+        { id: 'last_name', label: 'Last Name', sanitize: /[^A-Za-z]/g },
+        { id: 'user_id', label: 'PRN No', sanitize: /[^0-9]/g, maxLength: 8 },
+        { id: 'phone_no', label: 'Phone No', sanitize: /[^0-9]/g, maxLength: 10 },
         { id: 'city', label: 'City', sanitize: /[^A-Za-z ]/g },
         { id: 'state', label: 'State', sanitize: /[^A-Za-z ]/g },
         { id: 'pincode', label: 'Pincode', sanitize: /[^0-9]/g },
         { id: 'year_enrolled', label: 'Year Enrolled', type: 'text', sanitize: /[^0-9]/g },
-      ].map(({ id, label, type = 'text', sanitize }) => (
+      ].map(({ id, label, type = 'text', sanitize, maxLength }) => (
         <div key={id}>
           <label className="form-label">{label}</label>
           <input 
             {...register(id)} 
             type={type} 
+            maxLength={maxLength}
             className={errors[id] ? 'form-input-error' : 'form-input'} 
             id={id}
             onChange={(e) => {
