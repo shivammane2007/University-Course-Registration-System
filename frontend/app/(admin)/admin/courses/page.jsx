@@ -126,6 +126,18 @@ export default function CoursesPage() {
       )
     },
     {
+      key: 'created_by_role',
+      label: 'Source',
+      render: (v, r) => (
+        <div className="flex flex-col">
+          <Badge variant={v === 'ADMIN' ? 'approved' : 'pending'} />
+          <span className="text-[9px] font-bold text-muted mt-1 uppercase">
+            {v === 'ADMIN' ? 'Administrator' : `${r.creatorFaculty?.first_name} ${r.creatorFaculty?.last_name}`}
+          </span>
+        </div>
+      )
+    },
+    {
       key: 'actions', label: 'Actions',
       render: (_, row) => (
         <div className="flex items-center gap-2">

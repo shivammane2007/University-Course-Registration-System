@@ -135,6 +135,7 @@ const getCourses = async ({ page = 1, limit = 10, search = '' }) => {
       include: {
         department: { select: { dept_name: true } },
         courseFaculty: { include: { faculty: { select: { first_name: true, last_name: true, faculty_id: true } } } },
+        creatorFaculty: { select: { first_name: true, last_name: true } },
       },
     }),
     prisma.course.count({ where }),

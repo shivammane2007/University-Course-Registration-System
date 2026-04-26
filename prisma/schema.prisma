@@ -16,7 +16,7 @@ model Administrator {
   password   String   @db.VarChar(255)
   created_at DateTime @default(now())
 
-  courses    Course[]
+  courses    Course[] @relation("AdminCreatedCourses")
 
   @@map("administrators")
 }
@@ -49,6 +49,7 @@ model Faculty {
 
   department    Department      @relation(fields: [dept_id], references: [dept_id])
   courseFaculty CourseFaculty[]
+  createdCourses Course[] @relation("FacultyCreatedCourses")
 
   @@map("faculties")
 }
@@ -84,11 +85,16 @@ model Course {
   platform     String?  @db.VarChar(100)
   college_name String?  @db.VarChar(150)
   timing       String   @db.VarChar(100)
-  created_by   Int
-  created_at   DateTime @default(now())
+  created_by         Int?
+  created_by_faculty Int?
+  created_by_role    String   @default("ADMIN") @db.VarChar(20)
+  description        String?  @db.Text
+  isActive           Boolean  @default(true)
+  created_at         DateTime @default(now())
 
   department    Department      @relation(fields: [dept_id], references: [dept_id])
-  admin         Administrator   @relation(fields: [created_by], references: [admin_id])
+  admin         Administrator?  @relation("AdminCreatedCourses", fields: [created_by], references: [admin_id])
+  creatorFaculty Faculty?       @relation("FacultyCreatedCourses", fields: [created_by_faculty], references: [faculty_id])
   enrolments    Enrolment[]
   courseFaculty CourseFaculty[]
 

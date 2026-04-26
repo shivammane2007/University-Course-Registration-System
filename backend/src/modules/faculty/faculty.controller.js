@@ -32,4 +32,14 @@ const getSchedule = asyncWrapper(async (req, res) => {
   return sendSuccess(res, data, 'Schedule fetched');
 });
 
-module.exports = { getProfile, updateProfile, getMyCourses, getCourseStudents, updateCourse, getSchedule };
+const createCourse = asyncWrapper(async (req, res) => {
+  const data = await svc.createCourse(req.user.entity_id, req.body);
+  return sendSuccess(res, data, 'Course created successfully');
+});
+
+const deleteCourse = asyncWrapper(async (req, res) => {
+  await svc.deleteCourse(req.user.entity_id, req.params.id);
+  return sendSuccess(res, null, 'Course deleted successfully');
+});
+
+module.exports = { getProfile, updateProfile, getMyCourses, getCourseStudents, updateCourse, getSchedule, createCourse, deleteCourse };

@@ -93,4 +93,55 @@ const getSchedule = async (facultyId) => {
   }));
 };
 
-module.exports = { getProfile, updateProfile, getMyCourses, getCourseStudents, updateCourse, getSchedule };
+const createCourse = async (facultyId, data) => {
+  return prisma.$transaction(async (tx) => {
+    const course = await tx.course.create({
+      data: {
+        course_name: data.course_name,
+        dept_id: Number(data.dept_id),
+        duration: data.duration,
+        mode: data.mode,
+        timing: data.timing,
+        platform: data.platform,
+        college_name: data.college_name,
+        created_by_faculty: Number(facultyId),
+        created_by_role: 'FACULTY',
+        description: data.description,
+      },
+    });
+
+    await tx.courseFaculty.create({
+      data: {
+        course_id: course.course_id,
+        faculty_id: Number(facultyId),
+      },
+    });
+
+    return course;
+  });
+};
+
+const deleteCourse = async (facultyId, courseId) => {
+  const course = await prisma.course.findUnique({
+    where: { course_id: Number(courseId) },
+    include: { courseFaculty: true },
+  });
+
+  if (!course) throw Object.assign(new Error('Course not found'), { statusCode: 404 });
+
+  // Check if faculty is creator or assigned
+  const isCreator = course.created_by_faculty === Number(facultyId);
+  const isAssigned = course.courseFaculty.some((cf) => cf.faculty_id === Number(facultyId));
+
+  if (!isCreator && !isAssigned) {
+    throw Object.assign(new Error('Access denied to delete this course'), { statusCode: 403 });
+  }
+
+  return prisma.$transaction([
+    prisma.enrolment.deleteMany({ where: { course_id: Number(courseId) } }),
+    prisma.courseFaculty.deleteMany({ where: { course_id: Number(courseId) } }),
+    prisma.course.delete({ where: { course_id: Number(courseId) } }),
+  ]);
+};
+
+module.exports = { getProfile, updateProfile, getMyCourses, getCourseStudents, updateCourse, getSchedule, createCourse, deleteCourse };
