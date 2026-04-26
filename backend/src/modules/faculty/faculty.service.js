@@ -166,8 +166,8 @@ const updateSchedule = async (facultyId, courseId, data, updatedByRole = 'FACULT
 
   // 3. Upsert schedule using raw SQL (INSERT ... ON DUPLICATE KEY UPDATE)
   await prisma.$executeRawUnsafe(
-    `INSERT INTO schedules (faculty_id, course_id, days, start_time, end_time, mode, venue, note, updated_by_role)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO schedules (faculty_id, course_id, days, start_time, end_time, mode, venue, note, updated_by_role, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
      ON DUPLICATE KEY UPDATE
        days = VALUES(days),
        start_time = VALUES(start_time),
@@ -175,7 +175,8 @@ const updateSchedule = async (facultyId, courseId, data, updatedByRole = 'FACULT
        mode = VALUES(mode),
        venue = VALUES(venue),
        note = VALUES(note),
-       updated_by_role = VALUES(updated_by_role)`,
+       updated_by_role = VALUES(updated_by_role),
+       updated_at = NOW()`,
     fid, cid, data.days, data.start_time, data.end_time, data.mode, data.venue, data.note || null, updatedByRole
   );
 
