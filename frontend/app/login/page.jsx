@@ -9,6 +9,7 @@ import { GraduationCap, Eye, EyeOff, LogIn, UserCircle, ShieldCheck, BookOpen } 
 import api from '@/lib/axios';
 import { useAuthStore } from '@/store/authStore';
 import { LampContainer } from '@/components/ui/lamp';
+import { TypewriterTestimonial } from '@/components/ui/typewriter-testimonial';
 
 const loginSchema = z.object({
   user_id: z.string().min(1, 'User ID is required'),
@@ -152,22 +153,43 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="relative z-10 flex items-center gap-6">
-            <div className="flex -space-x-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-9 h-9 rounded-full border-2 border-[#1A1A2E] bg-white/5 backdrop-blur-sm shadow-xl flex items-center justify-center overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-tr from-accent/20 to-white/10" />
-                </div>
-              ))}
-              <div className="w-9 h-9 rounded-full border-2 border-[#1A1A2E] bg-accent flex items-center justify-center text-[10px] font-bold text-white shadow-xl">
-                +2k
-              </div>
-            </div>
-            <div className="h-8 w-[1px] bg-white/10" />
-            <span className="text-white/40 text-[10px] font-medium leading-tight tracking-wide">
-              Global recognition for <br />
-              Academic Excellence
-            </span>
+          {/* Testimonials Strip */}
+          <div className="relative z-10">
+            <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.25em] mb-3">
+              Trusted by our community
+            </p>
+            <TypewriterTestimonial testimonials={[
+              {
+                image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop',
+                text: 'UCRS made course registration seamless. I enrolled in all my subjects in under 2 minutes — no queues, no stress!',
+                name: 'Arjun Mehta',
+                jobtitle: 'B.Tech Student, Sem 5',
+              },
+              {
+                image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop',
+                text: 'Managing my course load and tracking enrolments has never been easier. The faculty dashboard is a game changer.',
+                name: 'Dr. Priya Nair',
+                jobtitle: 'Professor, CS Department',
+              },
+              {
+                image: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=80&h=80&fit=crop',
+                text: 'Approval workflows are instant. The admin panel gives me full visibility over every department in real time.',
+                name: 'Rohit Sharma',
+                jobtitle: 'Academic Administrator',
+              },
+              {
+                image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop',
+                text: 'I love how I can check my timetable, enrolment status, and grades all from one clean interface.',
+                name: 'Sneha Kulkarni',
+                jobtitle: 'M.Sc Student, Sem 2',
+              },
+              {
+                image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop',
+                text: 'Creating and assigning courses for my department took seconds. The system is robust and reliable.',
+                name: 'Prof. Anil Desai',
+                jobtitle: 'HOD, IT Department',
+              },
+            ]} />
           </div>
         </div>
 
@@ -315,10 +337,10 @@ export default function LoginPage() {
       </div>
       
       {/* Bottom info */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-30 pointer-events-none">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-6 opacity-40 pointer-events-none z-50 mix-blend-difference">
         <div className="h-[1px] w-12 bg-white" />
-        <span className="text-white text-[10px] font-black tracking-[0.3em] uppercase">
-          University System Management 2026
+        <span className="text-white text-[9px] font-black tracking-[0.4em] uppercase whitespace-nowrap">
+          University Subject Registration System
         </span>
         <div className="h-[1px] w-12 bg-white" />
       </div>
