@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import Providers from './providers';
 
 export const metadata = {
-  title: 'USRS — University Subject Registration System',
+  title: 'UCRS — University Course Registration System',
   description: 'Manage university courses, faculty, and student enrolments with role-based access control.',
 };
 

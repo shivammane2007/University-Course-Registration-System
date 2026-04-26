@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
@@ -16,7 +16,7 @@ export default function FacultyLayout({ children }) {
   if (!token || role !== 'faculty') return null;
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="layout-wrapper">
       <FacultySidebar />
       <main className="page-content">
         <div className="page-inner">{children}</div>

@@ -124,15 +124,20 @@
   .badge-offline { @apply bg-purple-50 text-purple-600 border border-purple-200; }
 
   /* Premium Sidebar */
+  /* Layout Wrapper utility */
+  .layout-wrapper {
+    @apply flex min-h-screen bg-background relative;
+  }
+
   .sidebar {
-    @apply fixed left-0 top-0 h-screen w-64 bg-primary-900 border-r border-white/5 flex flex-col z-40 shadow-2xl;
+    @apply fixed left-0 top-0 h-screen w-[78px] hover:w-[270px] bg-primary-900 border-r border-white/5 flex flex-col z-40 shadow-2xl transition-all duration-300 ease-in-out overflow-hidden;
   }
   .sidebar-header {
     @apply p-6 mb-4 flex items-center gap-3;
   }
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 rounded-btn text-sm font-medium text-primary-300
-           hover:bg-white/5 hover:text-white transition-all duration-200 mx-3 mb-1;
+    @apply flex items-center gap-3 px-3.5 py-3 rounded-btn text-sm font-medium text-primary-300
+           hover:bg-white/5 hover:text-white transition-all duration-200 mx-3 mb-1 relative;
   }
   .sidebar-link-active {
     @apply sidebar-link bg-accent text-white shadow-lg shadow-accent/20 hover:bg-accent;
@@ -143,7 +148,11 @@
 
   /* Refined Page layout */
   .page-content {
-    @apply ml-64 min-h-screen bg-background transition-all duration-500;
+    @apply ml-[78px] min-h-screen bg-background transition-all duration-300 ease-in-out flex-1 w-full;
+  }
+
+  .layout-wrapper:has(.sidebar:hover) .page-content {
+    @apply ml-[270px];
   }
   .page-inner {
     @apply p-8 max-w-7xl mx-auto;
