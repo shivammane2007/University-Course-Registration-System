@@ -90,14 +90,34 @@ const getFaculties = async ({ page = 1, limit = 10, search = '' }) => {
     ? { OR: [{ first_name: { contains: search } }, { last_name: { contains: search } }, { user_id: { contains: search } }] }
     : {};
 
-  const [data, total] = await Promise.all([
+  const [rawData, total] = await Promise.all([
     prisma.faculty.findMany({
       where, skip, take: Number(limit),
       orderBy: { created_at: 'desc' },
-      select: facultySelect,
+      include: {
+        department: { select: { dept_name: true } },
+        courseFaculty: {
+          include: {
+            course: {
+              select: {
+                course_name: true,
+                timing: true,
+              }
+            }
+          }
+        }
+      },
     }),
     prisma.faculty.count({ where }),
   ]);
+
+  // Strip passwords and build Schedule Info string
+  const data = rawData.map(({ password, ...f }) => {
+    const scheduleStr = f.courseFaculty.length > 0
+      ? f.courseFaculty.map(cf => `${cf.course.course_name}: ${cf.course.timing}`).join(' | ')
+      : 'No courses assigned';
+    return { ...f, 'Schedule Info': scheduleStr };
+  });
 
   return { data, pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / limit) } };
 };
@@ -286,9 +306,35 @@ const getReportSummary = async () => {
   };
 };
 
+const facultyService = require('../faculty/faculty.service');
+
+const getFacultySchedule = async (facultyId) => {
+  return facultyService.getSchedule(facultyId);
+};
+
+const updateFacultySchedule = async (facultyId, courseId, data) => {
+  return facultyService.updateSchedule(facultyId, courseId, data, 'ADMIN', true);
+};
+
+const assignCourseToFaculty = async (facultyId, courseId) => {
+  return prisma.courseFaculty.upsert({
+    where: {
+      course_id_faculty_id: {
+        course_id: Number(courseId),
+        faculty_id: Number(facultyId)
+      }
+    },
+    update: {}, // Do nothing if already assigned
+    create: {
+      course_id: Number(courseId),
+      faculty_id: Number(facultyId)
+    }
+  });
+};
+
 module.exports = {
   getDashboardStats, getStudents, createStudent, updateStudent, deleteStudent,
-  getFaculties, createFaculty, updateFaculty, deleteFaculty,
+  getFaculties, createFaculty, updateFaculty, deleteFaculty, updateFacultySchedule, getFacultySchedule, assignCourseToFaculty,
   getCourses, createCourse, updateCourse, deleteCourse, assignFaculty,
   getDepartments, createDepartment, updateDepartment, deleteDepartment,
   getEnrolments, approveEnrolment, rejectEnrolment,

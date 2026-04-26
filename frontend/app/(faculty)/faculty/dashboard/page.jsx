@@ -14,8 +14,15 @@ const fetchProfile = () => api.get('/faculty/profile').then((r) => r.data.data);
 const fetchCourses = () => api.get('/faculty/courses').then((r) => r.data.data);
 
 export default function FacultyDashboard() {
+  // ALL hooks must be called before any conditional returns (React Rules of Hooks)
   const { data: profile, isLoading: profileLoading } = useQuery({ queryKey: ['faculty-profile'], queryFn: fetchProfile });
   const { data: courses = [], isLoading: coursesLoading } = useQuery({ queryKey: ['faculty-courses'], queryFn: fetchCourses });
+  const { data: schedule = [] } = useQuery({ queryKey: ['faculty-schedule'], queryFn: () => api.get('/faculty/schedule').then(r => r.data.data) });
+
+  // Derived values (safe after all hooks)
+  const totalStudents = courses.reduce((acc, c) => acc + (c._count?.enrolments || 0), 0);
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const todayClasses = schedule.filter(s => s.days && s.days.includes(today));
 
   if (profileLoading || coursesLoading) return (
     <div className="page-inner">
@@ -26,11 +33,8 @@ export default function FacultyDashboard() {
     </div>
   );
 
-  const totalStudents = courses.reduce((acc, c) => acc + (c._count?.enrolments || 0), 0);
-
   return (
     <div className="page-inner">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-teal-600 flex items-center justify-center text-white shadow-xl shadow-teal-600/20">
@@ -53,7 +57,6 @@ export default function FacultyDashboard() {
         </div>
       </div>
 
-      {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <StatCard label="Assigned Courses" value={courses.length} icon={BookOpen} color="teal" />
         <StatCard label="Total Students" value={totalStudents} icon={Users} color="blue" trend="+5 from yesterday" />
@@ -61,7 +64,6 @@ export default function FacultyDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Courses Table */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-display font-bold text-primary-900">Assigned Courses</h2>
@@ -80,7 +82,7 @@ export default function FacultyDashboard() {
                   <span className="font-bold text-slate-700">{r._count?.enrolments || 0}</span>
                 </div>
               )},
-              { key: 'timing', label: 'Timing', render: (v) => <span className="text-xs font-mono text-slate-500">{v}</span> },
+              { key: 'timing', label: 'Timing', render: (v) => <span className="text-xs font-mono text-slate-500 font-bold">{v}</span> },
             ]}
             data={courses}
             loading={coursesLoading}
@@ -88,26 +90,30 @@ export default function FacultyDashboard() {
           />
         </div>
 
-        {/* Sidebar Widgets */}
         <div className="space-y-6">
           <div className="card bg-teal-900 text-white border-none">
             <h4 className="font-bold mb-4 flex items-center gap-2 text-teal-100">
               <Calendar className="w-5 h-5" /> Today's Schedule
             </h4>
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-teal-400 text-[10px] font-bold uppercase tracking-widest mb-1">Current Class</p>
-                <p className="font-bold text-lg">Introduction to CS</p>
-                <div className="flex items-center justify-between mt-3 text-xs text-teal-100/50">
-                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> 10:00 - 12:00</span>
-                  <span className="bg-teal-500/20 px-2 py-0.5 rounded text-teal-200">Room 402</span>
+              {todayClasses.length === 0 ? (
+                <div className="py-8 text-center text-teal-100/40 italic text-sm">
+                  No classes scheduled for today.
                 </div>
-              </div>
-              <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                <p className="text-teal-400 text-[10px] font-bold uppercase tracking-widest mb-1">Next Class</p>
-                <p className="font-bold">Advanced Data Structures</p>
-                <p className="text-xs text-teal-100/50 mt-2 flex items-center gap-1"><Clock className="w-3 h-3" /> 14:30 - 16:30</p>
-              </div>
+              ) : (
+                todayClasses.map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <p className="text-teal-400 text-[10px] font-bold uppercase tracking-widest mb-1">
+                      {idx === 0 ? 'Upcoming Class' : 'Next Class'}
+                    </p>
+                    <p className="font-bold text-lg">{item.course_name}</p>
+                    <div className="flex items-center justify-between mt-3 text-xs text-teal-100/50">
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {item.start_time} - {item.end_time}</span>
+                      <span className="bg-teal-500/20 px-2 py-0.5 rounded text-teal-200">{item.platform}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

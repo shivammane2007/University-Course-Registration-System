@@ -21,6 +21,9 @@ router.get('/faculties', ctrl.getFaculties);
 router.post('/faculties', validateFaculty, ctrl.createFaculty);
 router.put('/faculties/:id', validateFaculty, ctrl.updateFaculty);
 router.delete('/faculties/:id', ctrl.deleteFaculty);
+router.get('/faculties/:facultyId/schedule', ctrl.getFacultySchedule);
+router.put('/faculties/:facultyId/courses/:courseId/schedule', ctrl.updateFacultySchedule);
+router.post('/faculties/:facultyId/assign-course', ctrl.assignCourseToFaculty);
 
 // Courses
 router.get('/courses', ctrl.getCourses);

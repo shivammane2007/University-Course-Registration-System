@@ -4,12 +4,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Pencil, Trash2, Mail, Phone, MapPin, Briefcase } from 'lucide-react';
+import { Plus, Pencil, Trash2, Mail, Phone, MapPin, Briefcase, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import DataTable from '@/components/shared/DataTable';
 import Modal from '@/components/shared/Modal';
 import PageHeader from '@/components/shared/PageHeader';
+import AdminFacultyScheduleModal from '@/components/admin/AdminFacultyScheduleModal';
 
 import { 
   nameRegex, 
@@ -42,6 +43,7 @@ export default function FacultiesPage() {
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState({ open: false, mode: 'add', faculty: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, faculty: null });
+  const [scheduleModal, setScheduleModal] = useState({ open: false, faculty: null });
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-faculties', page, search],
@@ -124,6 +126,13 @@ export default function FacultiesPage() {
       label: 'Actions',
       render: (_, row) => (
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setScheduleModal({ open: true, faculty: row })} 
+            className="btn-icon btn-ghost text-primary-600"
+            title="Manage Schedule"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+          </button>
           <button onClick={() => openEdit(row)} className="btn-icon btn-ghost text-accent"><Pencil className="w-3.5 h-3.5" /></button>
           <button onClick={() => setDeleteModal({ open: true, faculty: row })} className="btn-icon btn-ghost text-danger"><Trash2 className="w-3.5 h-3.5" /></button>
         </div>
@@ -282,6 +291,15 @@ export default function FacultiesPage() {
           </p>
         </div>
       </Modal>
+
+      {/* Schedule Management Modal */}
+      {scheduleModal.open && (
+        <AdminFacultyScheduleModal 
+          open={scheduleModal.open} 
+          onClose={() => setScheduleModal({ open: false, faculty: null })}
+          faculty={scheduleModal.faculty}
+        />
+      )}
     </div>
   );
 }

@@ -50,6 +50,7 @@ model Faculty {
   department    Department      @relation(fields: [dept_id], references: [dept_id])
   courseFaculty CourseFaculty[]
   createdCourses Course[] @relation("FacultyCreatedCourses")
+  schedules     Schedule[]
 
   @@map("faculties")
 }
@@ -97,6 +98,7 @@ model Course {
   creatorFaculty Faculty?       @relation("FacultyCreatedCourses", fields: [created_by_faculty], references: [faculty_id])
   enrolments    Enrolment[]
   courseFaculty CourseFaculty[]
+  schedules     Schedule[]
 
   @@map("courses")
 }
@@ -200,4 +202,24 @@ model Holiday {
   status      String   @default("Active") @db.VarChar(20)
 
   @@map("holidays")
+}
+
+model Schedule {
+  id               Int      @id @default(autoincrement())
+  faculty_id       Int
+  course_id        Int
+  days             String   @db.VarChar(255) // Comma separated days
+  start_time       String   @db.VarChar(50)
+  end_time         String   @db.VarChar(50)
+  mode             CourseMode
+  venue            String   @db.VarChar(100)
+  note             String?  @db.Text
+  updated_at       DateTime @updatedAt
+  updated_by_role  String   @default("ADMIN") @db.VarChar(20)
+
+  faculty          Faculty  @relation(fields: [faculty_id], references: [faculty_id])
+  course           Course   @relation(fields: [course_id], references: [course_id])
+
+  @@unique([faculty_id, course_id])
+  @@map("schedules")
 }

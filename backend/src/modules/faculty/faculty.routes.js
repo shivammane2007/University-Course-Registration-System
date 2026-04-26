@@ -16,5 +16,6 @@ router.post('/courses', ctrl.createCourse);
 router.put('/courses/:id', ctrl.updateCourse);
 router.delete('/courses/:id', ctrl.deleteCourse);
 router.get('/schedule', ctrl.getSchedule);
+router.put('/schedule/:id', ctrl.updateSchedule);
 
 module.exports = router;

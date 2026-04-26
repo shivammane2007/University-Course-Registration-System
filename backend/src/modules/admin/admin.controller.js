@@ -122,10 +122,25 @@ const getReportSummary = asyncWrapper(async (req, res) => {
   return sendSuccess(res, data, 'Report summary fetched');
 });
 
+const getFacultySchedule = asyncWrapper(async (req, res) => {
+  const data = await adminService.getFacultySchedule(req.params.facultyId);
+  return sendSuccess(res, data, 'Faculty schedule fetched');
+});
+
+const updateFacultySchedule = asyncWrapper(async (req, res) => {
+  const data = await adminService.updateFacultySchedule(req.params.facultyId, req.params.courseId, req.body);
+  return sendSuccess(res, data, 'Faculty schedule updated');
+});
+
+const assignCourseToFaculty = asyncWrapper(async (req, res) => {
+  const data = await adminService.assignCourseToFaculty(req.params.facultyId, req.body.course_id);
+  return sendSuccess(res, data, 'Course assigned to faculty');
+});
+
 module.exports = {
   getDashboardStats,
   getStudents, createStudent, updateStudent, deleteStudent,
-  getFaculties, createFaculty, updateFaculty, deleteFaculty,
+  getFaculties, createFaculty, updateFaculty, deleteFaculty, updateFacultySchedule, getFacultySchedule, assignCourseToFaculty,
   getCourses, createCourse, updateCourse, deleteCourse, assignFaculty,
   getDepartments, createDepartment, updateDepartment, deleteDepartment,
   getEnrolments, approveEnrolment, rejectEnrolment,
