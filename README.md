@@ -1,4 +1,4 @@
-# 🎓 University Subject Registration System (USRS)
+# 🎓 University Course Registration System (UCRS)
 
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js%2014-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![Express.js](https://img.shields.io/badge/Backend-Express.js-lightgrey?style=flat-square&logo=express)](https://expressjs.com/)
@@ -72,7 +72,7 @@ cd "University Course Registration System"
 ### 2. Environment Setup
 **Backend** (`backend/.env`):
 ```env
-DATABASE_URL="mysql://root:<YOUR_PASSWORD>@localhost:3306/usrs_db"
+DATABASE_URL="mysql://root:<YOUR_PASSWORD>@localhost:3306/ucrs_db"
 JWT_SECRET="your_secret_here"
 JWT_REFRESH_SECRET="your_refresh_secret_here"
 JWT_EXPIRES_IN="15m"
@@ -88,7 +88,7 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ### 3. Initialize Database
 Create the database in MySQL:
 ```sql
-CREATE DATABASE usrs_db;
+CREATE DATABASE ucrs_db;
 ```
 
 ### 4. Install & Migrate

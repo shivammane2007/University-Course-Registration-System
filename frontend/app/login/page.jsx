@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { GraduationCap, Eye, EyeOff, LogIn, UserCircle, ShieldCheck, BookOpen } from 'lucide-react';
 import api from '@/lib/axios';
 import { useAuthStore } from '@/store/authStore';
+import { LampContainer } from '@/components/ui/lamp';
 
 const loginSchema = z.object({
   user_id: z.string().min(1, 'User ID is required'),
@@ -33,8 +34,8 @@ export default function LoginPage() {
 
   // Load remembered credentials on mount to avoid hydration mismatch
   useEffect(() => {
-    const savedId = localStorage.getItem('usrs_remember_id');
-    const savedRole = localStorage.getItem('usrs_remember_role');
+    const savedId = localStorage.getItem('ucrs_remember_id');
+    const savedRole = localStorage.getItem('ucrs_remember_role');
     if (savedId) {
       setValue('user_id', savedId);
       setRememberMe(true);
@@ -59,11 +60,11 @@ export default function LoginPage() {
       const { accessToken, refreshToken, user } = data.data;
       
       if (rememberMe) {
-        localStorage.setItem('usrs_remember_id', normalizedValues.user_id);
-        localStorage.setItem('usrs_remember_role', normalizedValues.role);
+        localStorage.setItem('ucrs_remember_id', normalizedValues.user_id);
+        localStorage.setItem('ucrs_remember_role', normalizedValues.role);
       } else {
-        localStorage.removeItem('usrs_remember_id');
-        localStorage.removeItem('usrs_remember_role');
+        localStorage.removeItem('ucrs_remember_id');
+        localStorage.removeItem('ucrs_remember_role');
       }
 
       setAuth({
@@ -103,74 +104,86 @@ export default function LoginPage() {
   }, [userIdValue, setValue, clearErrors]);
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#0F172A] relative overflow-hidden font-sans">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[140px] animate-pulse" />
-      <div className="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[140px]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-indigo-500/5 rounded-full blur-[160px]" />
+    <LampContainer className="font-sans">
+      {/* Premium Background Elements */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(79,70,229,0.1),transparent_50%)]" />
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[120px] animate-pulse duration-[10s]" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-indigo-500/10 rounded-full blur-[120px]" />
       
-      <div className="w-full max-w-6xl flex flex-col md:flex-row bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] overflow-hidden m-4 animate-in fade-in zoom-in-95 duration-1000">
+      {/* Noise Texture Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      
+      <div className="w-full max-w-6xl flex flex-col md:flex-row bg-white rounded-[40px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] overflow-hidden m-4 animate-in fade-in zoom-in-95 duration-1000 max-h-[95vh]">
         
         {/* Left Side: Branding/Visual */}
-        <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-accent via-accent-hover to-indigo-900 p-16 flex-col justify-between relative overflow-hidden">
-          {/* Decorative shapes */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -translate-x-1/3 translate-y-1/3" />
+        <div className="hidden md:flex md:w-[45%] bg-[#1A1A2E] p-10 lg:p-12 flex-col justify-between relative overflow-hidden border-r border-white/5">
+          {/* Animated Mesh Gradient Background */}
+          <div className="absolute inset-0 opacity-40">
+            <div className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%] bg-[radial-gradient(at_0%_0%,rgba(79,70,229,0.4)_0%,transparent_50%),radial-gradient(at_100%_0%,rgba(20,184,166,0.3)_0%,transparent_50%),radial-gradient(at_50%_100%,rgba(99,102,241,0.2)_0%,transparent_50%)] animate-pulse" />
+          </div>
           
-          <div className="relative z-10 flex items-center gap-4 group cursor-default">
-            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl transition-transform duration-500 group-hover:rotate-12">
-              <GraduationCap className="w-8 h-8 text-white" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+          
+          <div className="relative z-10 flex items-center gap-3 group cursor-default">
+            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center border border-white/30 shadow-2xl transition-transform duration-500 group-hover:rotate-12">
+              <GraduationCap className="w-7 h-7 text-white" />
             </div>
             <div>
-              <span className="text-2xl font-display font-bold text-white tracking-tight block">USRS Portal</span>
-              <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em]">Academic Excellence</span>
+              <span className="text-xl font-display font-bold text-white tracking-tight block">UCRS Portal</span>
+              <span className="text-[9px] font-bold text-white/50 uppercase tracking-[0.2em]">Academic Excellence</span>
             </div>
           </div>
 
           <div className="relative z-10">
-            <h1 className="text-5xl lg:text-6xl font-display font-bold text-white leading-[1.2] mb-8 tracking-tight">
-              Empowering the <br /> 
-              <span className="inline-block mt-3 px-6 py-2 rounded-2xl bg-white/10 border border-white/20 shadow-lg">
-                Next Generation
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
+              <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">New Update 2026</span>
+            </div>
+            <h1 className="text-4xl lg:text-5xl font-display font-bold text-white leading-tight mb-6 tracking-tight">
+              Empowering <br /> 
+              <span className="relative inline-block mt-2">
+                <span className="relative z-10 px-4 py-1.5">Next Generation</span>
+                <div className="absolute inset-0 bg-accent/20 rounded-xl skew-x-[-12deg] border border-accent/30 shadow-[0_0_20px_rgba(79,70,229,0.3)]" />
               </span> <br /> 
-              <span className="inline-block mt-3">of Learners.</span>
+              <span className="inline-block mt-2">of Learners.</span>
             </h1>
-            <p className="text-white/80 text-xl leading-relaxed max-w-md font-medium">
-              Streamlining university registrations with a modern, secure, and intuitive platform for everyone.
+            <p className="text-white/60 text-base leading-relaxed max-w-sm font-medium">
+              A premium, secure environment for university registrations and academic management.
             </p>
           </div>
 
           <div className="relative z-10 flex items-center gap-6">
             <div className="flex -space-x-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-accent-hover bg-white/10 shadow-lg overflow-hidden flex items-center justify-center">
-                  <div className="w-full h-full bg-gradient-to-tr from-white/5 to-white/20" />
+                <div key={i} className="w-9 h-9 rounded-full border-2 border-[#1A1A2E] bg-white/5 backdrop-blur-sm shadow-xl flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full bg-gradient-to-tr from-accent/20 to-white/10" />
                 </div>
               ))}
-              <div className="w-10 h-10 rounded-full border-2 border-accent-hover bg-accent-hover flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+              <div className="w-9 h-9 rounded-full border-2 border-[#1A1A2E] bg-accent flex items-center justify-center text-[10px] font-bold text-white shadow-xl">
                 +2k
               </div>
             </div>
-            <div className="h-10 w-[1px] bg-white/20" />
-            <span className="text-white/60 text-xs font-medium tracking-wide">
-              Trusted by thousands of <br />
-              students across the globe
+            <div className="h-8 w-[1px] bg-white/10" />
+            <span className="text-white/40 text-[10px] font-medium leading-tight tracking-wide">
+              Global recognition for <br />
+              Academic Excellence
             </span>
           </div>
         </div>
 
         {/* Right Side: Form */}
-        <div className="w-full md:w-1/2 p-10 lg:p-20 flex flex-col justify-center bg-white relative">
-          <div className="mb-12">
-            <h2 className="text-4xl font-display font-bold text-primary-900 mb-3 tracking-tight">Welcome Back</h2>
-            <p className="text-muted text-lg">Enter your details to access your dashboard</p>
+        <div className="w-full md:w-[55%] p-8 lg:p-14 flex flex-col justify-center bg-white relative">
+          <div className="mb-8 relative">
+            <h2 className="text-3xl font-display font-bold text-primary-900 mb-2 tracking-tight">Welcome Back</h2>
+            <p className="text-muted text-base">Enter your credentials to continue</p>
+            <div className="absolute -left-14 top-1/2 -translate-y-1/2 w-10 h-px bg-primary-100 hidden lg:block" />
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Role Selection */}
             <div>
-              <p className="text-xs font-bold text-primary-400 uppercase tracking-widest mb-4 ml-1">Account Role</p>
-              <div className="grid grid-cols-3 gap-4">
+              <p className="text-[10px] font-bold text-primary-400 uppercase tracking-widest mb-3 ml-1">Account Role</p>
+              <div className="grid grid-cols-3 gap-3">
                 {roles.map((role) => (
                   <button
                     key={role.id}
@@ -179,16 +192,16 @@ export default function LoginPage() {
                       setValue('role', role.id);
                       clearErrors();
                     }}
-                    className={`flex flex-col items-center justify-center p-5 rounded-3xl border-2 transition-all duration-500 group relative overflow-hidden ${
+                    className={`flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 group relative overflow-hidden ${
                       selectedRole === role.id 
-                        ? `border-accent bg-accent/5 shadow-xl shadow-accent/10` 
-                        : 'border-primary-50 bg-primary-50/30 hover:border-accent/20 hover:bg-white hover:shadow-lg'
+                        ? `border-accent bg-accent/[0.03] shadow-[0_8px_20px_-6px_rgba(79,70,229,0.15)] ring-1 ring-accent/20` 
+                        : 'border-primary-50 bg-primary-50/20 hover:border-accent/30 hover:bg-white hover:shadow-xl'
                     }`}
                   >
                     <div className={`transition-all duration-500 ${
                       selectedRole === role.id ? 'scale-110' : 'group-hover:scale-110'
                     }`}>
-                      <role.icon className={`w-7 h-7 mb-3 transition-colors duration-500 ${
+                      <role.icon className={`w-6 h-6 mb-2 transition-colors duration-500 ${
                         selectedRole === role.id ? 'text-accent' : 'text-primary-300 group-hover:text-primary-600'
                       }`} />
                     </div>
@@ -220,7 +233,7 @@ export default function LoginPage() {
                     id="user_id"
                     type="text"
                     placeholder={selectedRole === 'student' ? "e.g. PRN2024001" : "Enter your ID"}
-                    className={`${errors.user_id ? 'form-input-error' : 'form-input'} pl-12 h-14 text-base font-medium`}
+                    className={`${errors.user_id ? 'form-input-error' : 'form-input'} pl-12 h-12 text-sm font-medium`}
                   />
                 </div>
                 {errors.user_id && <p className="form-error">{errors.user_id.message}</p>}
@@ -237,7 +250,7 @@ export default function LoginPage() {
                     id="password"
                     type={showPass ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className={`${errors.password ? 'form-input-error' : 'form-input'} pl-12 h-14 text-base font-medium`}
+                    className={`${errors.password ? 'form-input-error' : 'form-input'} pl-12 h-12 text-sm font-medium`}
                   />
                   <button
                     type="button"
@@ -280,7 +293,7 @@ export default function LoginPage() {
               className="w-full relative group overflow-hidden rounded-[20px] active:scale-[0.98] transition-transform duration-200"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-accent to-indigo-600 transition-all duration-500 group-hover:scale-110" />
-              <div className="relative py-4 flex items-center justify-center gap-3 text-white font-bold text-lg shadow-xl shadow-accent/25">
+              <div className="relative py-3.5 flex items-center justify-center gap-3 text-white font-bold text-base shadow-xl shadow-accent/25">
                 {isLoading ? (
                   <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
@@ -293,8 +306,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-12 pt-8 border-t border-primary-50 text-center">
-            <p className="text-sm text-primary-400 font-medium">
+          <div className="mt-8 pt-6 border-t border-primary-50 text-center">
+            <p className="text-xs text-primary-400 font-medium">
               Having trouble logging in? <span className="font-bold text-accent hover:text-accent-hover cursor-pointer transition-colors decoration-2 hover:underline">Support Center</span>
             </p>
           </div>
@@ -309,6 +322,6 @@ export default function LoginPage() {
         </span>
         <div className="h-[1px] w-12 bg-white" />
       </div>
-    </div>
+    </LampContainer>
   );
 }

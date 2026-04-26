@@ -1,7 +1,7 @@
 {
-  "name": "usrs-backend",
+  "name": "ucrs-backend",
   "version": "1.0.0",
-  "description": "USRS Express.js Backend",
+  "description": "UCRS Express.js Backend",
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",

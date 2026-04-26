@@ -1,11 +1,11 @@
-# University Subject Registration System (USRS)
+# University Course Registration System (UCRS)
 ## Full-Stack Project Prompt — Complete Specification
 
 ---
 
 ## 1. Project Overview
 
-Build a full-stack **University Subject Registration System** with three separate role-based dashboards:
+Build a full-stack **University Course Registration System** with three separate role-based dashboards:
 - **Administrator** — system-wide control panel
 - **Faculty** — course and student management
 - **Student** — course registration and profile management
@@ -438,7 +438,7 @@ Student accent:#2563EB  → clear blue (not navy)
 
 ### Backend `.env`
 ```
-DATABASE_URL="mysql://root:<password>@localhost:3306/usrs_db"
+DATABASE_URL="mysql://root:<password>@localhost:3306/ucrs_db"
 JWT_SECRET="your_jwt_secret_here"
 JWT_REFRESH_SECRET="your_refresh_secret_here"
 JWT_EXPIRES_IN="15m"

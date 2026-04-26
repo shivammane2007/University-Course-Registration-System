@@ -11,7 +11,7 @@ const startServer = async () => {
     console.log('✅ Database connected successfully');
 
     app.listen(PORT, () => {
-      console.log(`🚀 USRS Backend running on http://localhost:${PORT}`);
+      console.log(`🚀 UCRS Backend running on http://localhost:${PORT}`);
       console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`   Health check: http://localhost:${PORT}/health`);
     });

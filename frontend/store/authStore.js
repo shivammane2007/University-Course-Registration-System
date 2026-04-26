@@ -16,7 +16,7 @@ export const useAuthStore = create(
         set({ user: null, token: null, refreshToken: null, role: null }),
     }),
     {
-      name: 'usrs-auth',
+      name: 'ucrs-auth',
       partialize: (state) => ({
         user: state.user,
         token: state.token,
