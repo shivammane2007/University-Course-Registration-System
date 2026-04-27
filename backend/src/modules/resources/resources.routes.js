@@ -14,13 +14,22 @@ router.get('/holidays', ctrl.getHolidays);
 // --- Protected Management Routes ---
 router.use(verifyToken);
 
+// Faculty-scoped read: ONLY returns this faculty's own uploaded resources
+router.get('/faculty/library', requireRole('faculty'), ctrl.getFacultyLibrary);
+
 // Library Management (Faculty Side)
 router.post('/admin/library', requireRole('faculty'), ctrl.createLibrary);
 router.put('/admin/library/:id', requireRole('faculty'), ctrl.updateLibrary);
 router.delete('/admin/library/:id', requireRole('faculty'), ctrl.deleteLibrary);
 
+// Admin read route (needs auth to confirm admin)
+router.get('/admin/library', requireRole('admin'), ctrl.getLibrary);
+
 // Admin-only Management
 router.use(requireRole('admin'));
+
+// Admin Library Delete (Admin can delete any resource)
+router.delete('/admin/library/remove/:id', ctrl.adminDeleteLibrary);
 
 // Exam Management
 router.post('/admin/exams', ctrl.createExam);

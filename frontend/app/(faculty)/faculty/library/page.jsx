@@ -22,8 +22,14 @@ const librarySchema = z.object({
   status: z.enum(['Active', 'Hidden']),
 });
 
-const fetchLibrary = ({ search, category }) =>
-  api.get('/api/resources/library', { params: { search, category } }).then((r) => r.data);
+// Faculty-scoped endpoint — returns ONLY this faculty's own uploads (enforced server-side)
+const fetchLibrary = async ({ search, category }) => {
+  const params = {};
+  if (search) params.search = search;
+  if (category && category !== 'All') params.category = category;
+  const res = await api.get('/resources/faculty/library', { params });
+  return res.data.data || [];
+};
 
 const categories = ['All', 'Engineering', 'Computer Science', 'Civil', 'Mechanical', 'Electronics', 'Management'];
 
@@ -52,19 +58,19 @@ export default function FacultyLibraryPage() {
   };
 
   const createMut = useMutation({
-    mutationFn: (d) => api.post('/api/resources/admin/library', d),
+    mutationFn: (d) => api.post('/resources/admin/library', d),
     onSuccess: () => { toast.success('Resource added'); qc.invalidateQueries({ queryKey: ['faculty-library'] }); setModal({ open: false }); },
     onError: (e) => toast.error(e.response?.data?.error || 'Failed'),
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/resources/admin/library/${id}`, data),
+    mutationFn: ({ id, data }) => api.put(`/resources/admin/library/${id}`, data),
     onSuccess: () => { toast.success('Resource updated'); qc.invalidateQueries({ queryKey: ['faculty-library'] }); setModal({ open: false }); },
     onError: (e) => toast.error(e.response?.data?.error || 'Failed'),
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => api.delete(`/api/resources/admin/library/${id}`),
+    mutationFn: (id) => api.delete(`/resources/admin/library/${id}`),
     onSuccess: () => { toast.success('Resource deleted'); qc.invalidateQueries({ queryKey: ['faculty-library'] }); setDeleteModal({ open: false }); },
     onError: (e) => toast.error(e.response?.data?.error || 'Failed to delete'),
   });
@@ -165,7 +171,7 @@ export default function FacultyLibraryPage() {
 
         <DataTable
           columns={columns}
-          data={data?.data || []}
+          data={data || []}
           loading={isLoading}
           onSearch={setSearch}
           searchPlaceholder="Search by title, subject or author..."

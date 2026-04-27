@@ -12,6 +12,12 @@ const wrap = (fn) => async (req, res, next) => {
 // Library
 const getLibrary = wrap((req) => service.getAllLibrary(req.query));
 
+// Faculty-scoped library — returns only resources uploaded by THIS faculty
+const getFacultyLibrary = wrap((req) => {
+  const { entity_id } = req.user;  // entity_id = faculty_id from JWT
+  return service.getFacultyLibrary(req.query, entity_id);
+});
+
 const createLibrary = wrap((req) => {
   const { role, entity_id } = req.user;
   if (role !== 'faculty') {
@@ -35,11 +41,16 @@ const updateLibrary = wrap((req) => {
 const deleteLibrary = wrap((req) => {
   const { role, entity_id } = req.user;
   if (role !== 'faculty') {
-    const err = new Error('Admin cannot delete library resources');
+    const err = new Error('Admin cannot delete library resources via this route');
     err.statusCode = 403;
     throw err;
   }
   return service.deleteLibrary(req.params.id, entity_id);
+});
+
+const adminDeleteLibrary = wrap((req) => {
+  // Admin can delete any resource - no ownership check
+  return service.deleteLibrary(req.params.id, null);
 });
 
 // Exams
@@ -69,7 +80,7 @@ const updateHoliday = wrap((req) => service.updateHoliday(req.params.id, req.bod
 const deleteHoliday = wrap((req) => service.deleteHoliday(req.params.id));
 
 module.exports = {
-  getLibrary, createLibrary, updateLibrary, deleteLibrary,
+  getLibrary, getFacultyLibrary, createLibrary, updateLibrary, deleteLibrary, adminDeleteLibrary,
   getExams, createExam, updateExam, deleteExam,
   getGrading, updateGradingComponent, deleteGradingComponent,
   createGradeScale, updateGradeScale, deleteGradeScale,

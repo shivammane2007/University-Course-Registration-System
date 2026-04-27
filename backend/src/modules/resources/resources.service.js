@@ -21,6 +21,28 @@ const getAllLibrary = async (params) => {
   });
 };
 
+// Faculty-scoped: only returns resources uploaded by this faculty member
+const getFacultyLibrary = async (params, facultyId) => {
+  const { search, category, status } = params;
+  return prisma.libraryResource.findMany({
+    where: {
+      uploaded_by_faculty_id: facultyId,
+      AND: [
+        search ? {
+          OR: [
+            { title: { contains: search } },
+            { subject: { contains: search } },
+            { author: { contains: search } }
+          ]
+        } : {},
+        category && category !== 'All' ? { category } : {},
+        status ? { status } : {}
+      ]
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+};
+
 const createLibrary = async (data, facultyId) => {
   const faculty = await prisma.faculty.findUnique({ where: { faculty_id: facultyId } });
   if (!faculty) throw new Error('Faculty member not found');
@@ -143,7 +165,7 @@ const updateHoliday = async (id, data) => prisma.holiday.update({
 const deleteHoliday = async (id) => prisma.holiday.delete({ where: { id: parseInt(id) } });
 
 module.exports = {
-  getAllLibrary, createLibrary, updateLibrary, deleteLibrary,
+  getAllLibrary, getFacultyLibrary, createLibrary, updateLibrary, deleteLibrary,
   getAllExams, createExam, updateExam, deleteExam,
   getGradingRubric, updateGradingRubric, deleteGradingRubric,
   getGradeScales, createGradeScale, updateGradeScale, deleteGradeScale,
