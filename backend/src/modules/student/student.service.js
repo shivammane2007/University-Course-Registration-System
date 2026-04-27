@@ -5,6 +5,8 @@ const studentSelect = {
   student_id: true, user_id: true, first_name: true, last_name: true,
   phone_no: true, city: true, state: true, pincode: true, dob: true,
   gender: true, year_enrolled: true, dept_id: true, created_at: true,
+  address: true, guardian_name: true, alt_phone: true,
+  emergency_contact: true, blood_group: true, profile_image_url: true,
   department: { select: { dept_name: true } },
 };
 
@@ -16,11 +18,27 @@ const getProfile = async (studentId) => {
 };
 
 const updateProfile = async (studentId, data) => {
-  const updateData = { ...data };
-  if (data.dob) updateData.dob = new Date(data.dob);
-  if (data.dept_id) updateData.dept_id = Number(data.dept_id);
-  if (data.password) updateData.password = await bcrypt.hash(data.password, 10);
-  else delete updateData.password;
+  // Whitelist editable fields to prevent accidental or malicious updates to restricted fields
+  const editableFields = [
+    'phone_no', 'city', 'state', 'pincode', 'gender', 'address', 'dob',
+    'guardian_name', 'alt_phone', 'emergency_contact', 'blood_group', 'profile_image_url'
+  ];
+
+  const updateData = {};
+  
+  // Only include fields that are in our whitelist
+  editableFields.forEach(field => {
+    if (data[field] !== undefined) {
+      updateData[field] = data[field];
+    }
+  });
+
+  if (updateData.dob) updateData.dob = new Date(updateData.dob);
+  
+  // Handle password separately as it's not in the editableFields whitelist for profile info
+  if (data.password) {
+    updateData.password = await bcrypt.hash(data.password, 10);
+  }
 
   return prisma.student.update({
     where: { student_id: Number(studentId) },

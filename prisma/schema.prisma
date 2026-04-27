@@ -53,22 +53,28 @@ model Faculty {
 }
 
 model Student {
-  student_id    Int         @id @default(autoincrement())
-  user_id       String      @unique @db.VarChar(50)
-  password      String      @db.VarChar(255)
-  first_name    String      @db.VarChar(50)
-  last_name     String      @db.VarChar(50)
-  dob           DateTime    @db.Date
-  gender        Gender
-  phone_no      String      @db.VarChar(15)
-  city          String      @db.VarChar(80)
-  state         String      @db.VarChar(80)
-  pincode       String      @db.VarChar(10)
-  year_enrolled Int         @db.Year
-  dept_id       Int
-  created_at    DateTime    @default(now())
-  enrolments    Enrolment[]
-  department    Department  @relation(fields: [dept_id], references: [dept_id])
+  student_id        Int         @id @default(autoincrement())
+  user_id           String      @unique @db.VarChar(50)
+  password          String      @db.VarChar(255)
+  first_name        String      @db.VarChar(50)
+  last_name         String      @db.VarChar(50)
+  dob               DateTime    @db.Date
+  gender            Gender
+  phone_no          String      @db.VarChar(15)
+  city              String      @db.VarChar(80)
+  state             String      @db.VarChar(80)
+  pincode           String      @db.VarChar(10)
+  address           String?     @db.Text
+  guardian_name     String?     @db.VarChar(100)
+  alt_phone         String?     @db.VarChar(15)
+  emergency_contact String?     @db.VarChar(15)
+  blood_group       String?     @db.VarChar(10)
+  profile_image_url String?     @db.VarChar(500)
+  year_enrolled     Int         @db.Year
+  dept_id           Int
+  created_at        DateTime    @default(now())
+  enrolments        Enrolment[]
+  department        Department  @relation(fields: [dept_id], references: [dept_id])
 
   @@index([dept_id], map: "students_dept_id_fkey")
   @@map("students")
