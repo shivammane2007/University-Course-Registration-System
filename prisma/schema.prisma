@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../backend/node_modules/.prisma/client"
 }
 
 datasource db {
@@ -41,10 +42,11 @@ model Faculty {
   contact_no     String          @db.VarChar(15)
   dept_id        Int
   created_at     DateTime        @default(now())
-  courseFaculty  CourseFaculty[]
-  createdCourses Course[]        @relation("FacultyCreatedCourses")
-  department     Department      @relation(fields: [dept_id], references: [dept_id])
-  schedules      Schedule[]
+  courseFaculty    CourseFaculty[]
+  createdCourses   Course[]          @relation("FacultyCreatedCourses")
+  department       Department        @relation(fields: [dept_id], references: [dept_id])
+  libraryResources LibraryResource[] @relation("FacultyUploadedResources")
+  schedules        Schedule[]
 
   @@index([dept_id], map: "faculties_dept_id_fkey")
   @@map("faculties")
@@ -127,17 +129,22 @@ model Enrolment {
 }
 
 model LibraryResource {
-  id          Int      @id @default(autoincrement())
-  title       String   @db.VarChar(255)
-  subject     String   @db.VarChar(100)
-  author      String   @db.VarChar(100)
-  category    String   @db.VarChar(100)
-  description String?  @db.Text
-  fileUrl     String   @db.VarChar(500)
-  status      String   @default("Active") @db.VarChar(20)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                     Int      @id @default(autoincrement())
+  title                  String   @db.VarChar(255)
+  subject                String   @db.VarChar(100)
+  author                 String   @db.VarChar(100)
+  category               String   @db.VarChar(100)
+  description            String?  @db.Text
+  fileUrl                String   @db.VarChar(500)
+  status                 String   @default("Active") @db.VarChar(20)
+  uploaded_by_faculty_id Int?
+  uploaded_by_name       String?  @db.VarChar(100)
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
 
+  uploader Faculty? @relation("FacultyUploadedResources", fields: [uploaded_by_faculty_id], references: [faculty_id])
+
+  @@index([uploaded_by_faculty_id], map: "library_resources_uploaded_by_faculty_id_fkey")
   @@map("library_resources")
 }
 

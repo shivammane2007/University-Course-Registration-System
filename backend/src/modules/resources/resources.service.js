@@ -21,9 +21,43 @@ const getAllLibrary = async (params) => {
   });
 };
 
-const createLibrary = async (data) => prisma.libraryResource.create({ data });
-const updateLibrary = async (id, data) => prisma.libraryResource.update({ where: { id: parseInt(id) }, data });
-const deleteLibrary = async (id) => prisma.libraryResource.delete({ where: { id: parseInt(id) } });
+const createLibrary = async (data, facultyId) => {
+  const faculty = await prisma.faculty.findUnique({ where: { faculty_id: facultyId } });
+  if (!faculty) throw new Error('Faculty member not found');
+
+  return prisma.libraryResource.create({
+    data: {
+      ...data,
+      uploaded_by_faculty_id: facultyId,
+      uploaded_by_name: `${faculty.first_name} ${faculty.last_name}`
+    }
+  });
+};
+
+const updateLibrary = async (id, data, facultyId) => {
+  const resource = await prisma.libraryResource.findUnique({ where: { id: parseInt(id) } });
+  if (!resource) throw new Error('Resource not found');
+
+  if (facultyId && resource.uploaded_by_faculty_id !== facultyId) {
+    throw new Error('Access denied. You can only edit your own resources.');
+  }
+
+  return prisma.libraryResource.update({
+    where: { id: parseInt(id) },
+    data
+  });
+};
+
+const deleteLibrary = async (id, facultyId) => {
+  const resource = await prisma.libraryResource.findUnique({ where: { id: parseInt(id) } });
+  if (!resource) throw new Error('Resource not found');
+
+  if (facultyId && resource.uploaded_by_faculty_id !== facultyId) {
+    throw new Error('Access denied. You can only delete your own resources.');
+  }
+
+  return prisma.libraryResource.delete({ where: { id: parseInt(id) } });
+};
 
 // --- Exam Schedules ---
 const getAllExams = async (params) => {

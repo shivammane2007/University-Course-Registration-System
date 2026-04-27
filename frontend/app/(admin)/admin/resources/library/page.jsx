@@ -1,25 +1,11 @@
 'use client';
-import { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Plus, Pencil, Trash2, ExternalLink, Library } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { ExternalLink, Eye } from 'lucide-react';
 import api from '@/lib/axios';
 import DataTable from '@/components/shared/DataTable';
 import Modal from '@/components/shared/Modal';
 import PageHeader from '@/components/shared/PageHeader';
-
-const librarySchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  subject: z.string().min(1, 'Subject is required'),
-  author: z.string().min(1, 'Author is required'),
-  category: z.string().min(1, 'Category is required'),
-  description: z.string().optional(),
-  fileUrl: z.string().url('Invalid URL').or(z.string().min(1, 'File URL required')),
-  status: z.enum(['Active', 'Hidden']),
-});
 
 const fetchLibrary = ({ search, category }) =>
   api.get('/api/resources/library', { params: { search, category } }).then((r) => r.data);
@@ -27,52 +13,14 @@ const fetchLibrary = ({ search, category }) =>
 const categories = ['All', 'Engineering', 'Computer Science', 'Civil', 'Mechanical', 'Electronics', 'Management'];
 
 export default function AdminLibraryPage() {
-  const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [modal, setModal] = useState({ open: false, mode: 'add', resource: null });
-  const [deleteModal, setDeleteModal] = useState({ open: false, resource: null });
+  const [detailsModal, setDetailsModal] = useState({ open: false, resource: null });
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-library', search, category],
     queryFn: () => fetchLibrary({ search, category }),
   });
-
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
-    resolver: zodResolver(librarySchema),
-  });
-
-  const openAdd = () => { reset({ status: 'Active' }); setModal({ open: true, mode: 'add', resource: null }); };
-  const openEdit = (r) => {
-    reset(r);
-    setModal({ open: true, mode: 'edit', resource: r });
-  };
-
-  const createMut = useMutation({
-    mutationFn: (d) => api.post('/api/resources/admin/library', d),
-    onSuccess: () => { toast.success('Resource added'); qc.invalidateQueries({ queryKey: ['admin-library'] }); setModal({ open: false }); },
-    onError: (e) => toast.error(e.response?.data?.error || 'Failed'),
-  });
-
-  const updateMut = useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/resources/admin/library/${id}`, data),
-    onSuccess: () => { toast.success('Resource updated'); qc.invalidateQueries({ queryKey: ['admin-library'] }); setModal({ open: false }); },
-    onError: (e) => toast.error(e.response?.data?.error || 'Failed'),
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: (id) => api.delete(`/api/resources/admin/library/${id}`),
-    onSuccess: () => { toast.success('Resource deleted'); qc.invalidateQueries({ queryKey: ['admin-library'] }); setDeleteModal({ open: false }); },
-    onError: () => toast.error('Failed to delete'),
-  });
-
-  const onSubmit = (values) => {
-    if (modal.mode === 'add') {
-      createMut.mutate(values);
-    } else {
-      updateMut.mutate({ id: modal.resource.id, data: values });
-    }
-  };
 
   const columns = [
     { key: 'id', label: 'ID' },
@@ -80,15 +28,7 @@ export default function AdminLibraryPage() {
     { key: 'subject', label: 'Subject' },
     { key: 'author', label: 'Author' },
     { key: 'category', label: 'Category' },
-    { 
-      key: 'fileUrl', 
-      label: 'File', 
-      render: (val) => (
-        <a href={val} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-          <ExternalLink className="w-3 h-3" /> Link
-        </a>
-      ) 
-    },
+    { key: 'uploaded_by_name', label: 'Uploaded By', render: (val) => val || 'System/Admin' },
     { 
       key: 'status', 
       label: 'Status', 
@@ -99,26 +39,35 @@ export default function AdminLibraryPage() {
       ) 
     },
     {
-      key: 'actions', label: 'Actions',
+      key: 'actions', label: 'Quick View',
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <button onClick={() => openEdit(row)} className="btn-ghost btn-sm btn-icon text-accent">
-            <Pencil className="w-3.5 h-3.5" />
+          <button 
+            onClick={() => setDetailsModal({ open: true, resource: row })} 
+            className="btn-ghost btn-sm btn-icon text-primary"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
           </button>
-          <button onClick={() => setDeleteModal({ open: true, resource: row })} className="btn-ghost btn-sm btn-icon text-danger">
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <a 
+            href={row.fileUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="btn-ghost btn-sm btn-icon text-blue-600"
+            title="Open/Download"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
         </div>
       ),
     },
   ];
 
   return (
-    <div className="pt-6">
+    <div className="pt-6 animate-in fade-in duration-500">
       <PageHeader
         title="Manage Digital Library"
-        subtitle="Upload and manage academic books and notes"
-        action={<button onClick={openAdd} className="btn-primary btn-sm"><Plus className="w-3.5 h-3.5" />Add Resource</button>}
+        subtitle="View all approved academic books and uploaded resources"
       />
 
       <div className="card">
@@ -141,77 +90,43 @@ export default function AdminLibraryPage() {
       </div>
 
       <Modal
-        open={modal.open}
-        onClose={() => setModal({ open: false })}
-        title={modal.mode === 'add' ? 'Add Resource' : 'Edit Resource'}
-        footer={
-          <>
-            <button onClick={() => setModal({ open: false })} className="btn-secondary">Cancel</button>
-            <button onClick={handleSubmit(onSubmit)} disabled={createMut.isPending || updateMut.isPending} className="btn-primary">
-              {createMut.isPending || updateMut.isPending ? 'Saving...' : 'Save'}
-            </button>
-          </>
-        }
+        open={detailsModal.open}
+        onClose={() => setDetailsModal({ open: false })}
+        title="Resource Details"
+        footer={<button onClick={() => setDetailsModal({ open: false })} className="btn-primary">Close</button>}
       >
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="form-label">Book Title</label>
-            <input {...register('title')} className={errors.title ? 'form-input-error' : 'form-input'} />
-            {errors.title && <p className="form-error">{errors.title.message}</p>}
+        {detailsModal.resource && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Title</p>
+              <p className="font-bold text-primary-900">{detailsModal.resource.title}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Author</p>
+                <p className="font-medium text-slate-700">{detailsModal.resource.author}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Category</p>
+                <p className="font-medium text-slate-700">{detailsModal.resource.category}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Subject</p>
+              <p className="font-medium text-slate-700">{detailsModal.resource.subject}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Uploaded By</p>
+              <p className="font-medium text-slate-700">{detailsModal.resource.uploaded_by_name || 'System/Admin'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Description</p>
+              <p className="text-sm text-slate-600 italic">
+                {detailsModal.resource.description || 'No description provided.'}
+              </p>
+            </div>
           </div>
-          <div>
-            <label className="form-label">Subject</label>
-            <input {...register('subject')} className={errors.subject ? 'form-input-error' : 'form-input'} />
-            {errors.subject && <p className="form-error">{errors.subject.message}</p>}
-          </div>
-          <div>
-            <label className="form-label">Author</label>
-            <input {...register('author')} className={errors.author ? 'form-input-error' : 'form-input'} />
-            {errors.author && <p className="form-error">{errors.author.message}</p>}
-          </div>
-          <div>
-            <label className="form-label">Category</label>
-            <select {...register('category')} className={errors.category ? 'form-input-error' : 'form-select'}>
-              <option value="">Select Category</option>
-              {categories.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            {errors.category && <p className="form-error">{errors.category.message}</p>}
-          </div>
-          <div>
-            <label className="form-label">Status</label>
-            <select {...register('status')} className="form-select">
-              <option value="Active">Active</option>
-              <option value="Hidden">Hidden</option>
-            </select>
-          </div>
-          <div className="col-span-2">
-            <label className="form-label">File URL (PDF / Resource Link)</label>
-            <input {...register('fileUrl')} className={errors.fileUrl ? 'form-input-error' : 'form-input'} placeholder="https://example.com/book.pdf" />
-            {errors.fileUrl && <p className="form-error">{errors.fileUrl.message}</p>}
-          </div>
-          <div className="col-span-2">
-            <label className="form-label">Description</label>
-            <textarea {...register('description')} className="form-input h-24 resize-none" />
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        open={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false })}
-        title="Delete Resource"
-        footer={
-          <>
-            <button onClick={() => setDeleteModal({ open: false })} className="btn-secondary">Cancel</button>
-            <button onClick={() => deleteMut.mutate(deleteModal.resource?.id)} disabled={deleteMut.isPending} className="btn-danger">
-              {deleteMut.isPending ? 'Deleting...' : 'Delete'}
-            </button>
-          </>
-        }
-      >
-        <p className="text-sm text-muted">
-          Are you sure you want to delete <strong className="text-primary">{deleteModal.resource?.title}</strong>? This action cannot be undone.
-        </p>
+        )}
       </Modal>
     </div>
   );

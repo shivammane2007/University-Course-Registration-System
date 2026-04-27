@@ -11,13 +11,16 @@ router.get('/exams', ctrl.getExams);
 router.get('/grading', ctrl.getGrading);
 router.get('/holidays', ctrl.getHolidays);
 
-// --- Admin Management Routes (Protected) ---
-router.use(verifyToken, requireRole('admin'));
+// --- Protected Management Routes ---
+router.use(verifyToken);
 
-// Library Management
-router.post('/admin/library', ctrl.createLibrary);
-router.put('/admin/library/:id', ctrl.updateLibrary);
-router.delete('/admin/library/:id', ctrl.deleteLibrary);
+// Library Management (Faculty Side)
+router.post('/admin/library', requireRole('faculty'), ctrl.createLibrary);
+router.put('/admin/library/:id', requireRole('faculty'), ctrl.updateLibrary);
+router.delete('/admin/library/:id', requireRole('faculty'), ctrl.deleteLibrary);
+
+// Admin-only Management
+router.use(requireRole('admin'));
 
 // Exam Management
 router.post('/admin/exams', ctrl.createExam);

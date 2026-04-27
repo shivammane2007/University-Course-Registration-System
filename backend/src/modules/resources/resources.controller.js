@@ -2,7 +2,7 @@ const service = require('./resources.service');
 
 const wrap = (fn) => async (req, res, next) => {
   try {
-    const result = await fn(req, res);
+    const result = await Promise.resolve(fn(req, res));
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);
@@ -11,9 +11,36 @@ const wrap = (fn) => async (req, res, next) => {
 
 // Library
 const getLibrary = wrap((req) => service.getAllLibrary(req.query));
-const createLibrary = wrap((req) => service.createLibrary(req.body));
-const updateLibrary = wrap((req) => service.updateLibrary(req.params.id, req.body));
-const deleteLibrary = wrap((req) => service.deleteLibrary(req.params.id));
+
+const createLibrary = wrap((req) => {
+  const { role, entity_id } = req.user;
+  if (role !== 'faculty') {
+    const err = new Error('Only faculty members can add resources');
+    err.statusCode = 403;
+    throw err;
+  }
+  return service.createLibrary(req.body, entity_id);
+});
+
+const updateLibrary = wrap((req) => {
+  const { role, entity_id } = req.user;
+  if (role !== 'faculty') {
+    const err = new Error('Admin cannot modify library resources');
+    err.statusCode = 403;
+    throw err;
+  }
+  return service.updateLibrary(req.params.id, req.body, entity_id);
+});
+
+const deleteLibrary = wrap((req) => {
+  const { role, entity_id } = req.user;
+  if (role !== 'faculty') {
+    const err = new Error('Admin cannot delete library resources');
+    err.statusCode = 403;
+    throw err;
+  }
+  return service.deleteLibrary(req.params.id, entity_id);
+});
 
 // Exams
 const getExams = wrap((req) => service.getAllExams(req.query));
