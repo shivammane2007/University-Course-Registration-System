@@ -15,7 +15,7 @@ export default function GradingRubric() {
   useEffect(() => {
     const fetchGrading = async () => {
       try {
-        const res = await api.get('/api/resources/grading');
+        const res = await api.get('/resources/grading');
         setData(res.data.data);
       } catch (error) {
         console.error('Failed to fetch grading:', error);

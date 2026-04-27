@@ -8,7 +8,7 @@ import api from '@/lib/axios';
 import Modal from '@/components/shared/Modal';
 import PageHeader from '@/components/shared/PageHeader';
 
-const fetchGrading = () => api.get('/api/resources/grading').then((r) => r.data.data);
+const fetchGrading = () => api.get('/resources/grading').then((r) => r.data.data);
 
 export default function AdminGradingPage() {
   const qc = useQueryClient();
@@ -25,24 +25,24 @@ export default function AdminGradingPage() {
 
   // Mutations
   const updateCompMut = useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/resources/admin/grading/component/${id || ''}`, data),
+    mutationFn: ({ id, data }) => api.put(`/resources/admin/grading/component/${id || ''}`, data),
     onSuccess: () => { toast.success('Component updated'); qc.invalidateQueries({ queryKey: ['admin-grading'] }); setComponentModal({ open: false }); },
   });
 
   const deleteCompMut = useMutation({
-    mutationFn: (id) => api.delete(`/api/resources/admin/grading/component/${id}`),
+    mutationFn: (id) => api.delete(`/resources/admin/grading/component/${id}`),
     onSuccess: () => { toast.success('Component deleted'); qc.invalidateQueries({ queryKey: ['admin-grading'] }); },
   });
 
   const scaleMut = useMutation({
     mutationFn: ({ id, data, mode }) => mode === 'add' 
-      ? api.post('/api/resources/admin/grading/scale', data) 
-      : api.put(`/api/resources/admin/grading/scale/${id}`, data),
+      ? api.post('/resources/admin/grading/scale', data) 
+      : api.put(`/resources/admin/grading/scale/${id}`, data),
     onSuccess: () => { toast.success('Scale updated'); qc.invalidateQueries({ queryKey: ['admin-grading'] }); setScaleModal({ open: false }); },
   });
 
   const deleteScaleMut = useMutation({
-    mutationFn: (id) => api.delete(`/api/resources/admin/grading/scale/${id}`),
+    mutationFn: (id) => api.delete(`/resources/admin/grading/scale/${id}`),
     onSuccess: () => { toast.success('Scale deleted'); qc.invalidateQueries({ queryKey: ['admin-grading'] }); },
   });
 

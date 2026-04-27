@@ -64,6 +64,9 @@ api.interceptors.response.use(
         useAuthStore.getState().setAuth({ token: newToken, refreshToken: newRefresh });
         processQueue(null, newToken);
         originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        // Clear baseURL so Axios does NOT re-join it with the already-resolved URL.
+        // Without this, replaying causes /api/ to be prepended twice → /api/api/...
+        originalRequest.baseURL = '';
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);

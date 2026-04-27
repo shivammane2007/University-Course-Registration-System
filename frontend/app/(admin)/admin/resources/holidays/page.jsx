@@ -20,7 +20,7 @@ const holidaySchema = z.object({
 });
 
 const fetchHolidays = ({ search, type }) =>
-  api.get('/api/resources/holidays', { params: { search, type } }).then((r) => r.data);
+  api.get('/resources/holidays', { params: { search, type } }).then((r) => r.data);
 
 export default function AdminHolidaysPage() {
   const qc = useQueryClient();
@@ -48,19 +48,19 @@ export default function AdminHolidaysPage() {
   };
 
   const createMut = useMutation({
-    mutationFn: (d) => api.post('/api/resources/admin/holidays', d),
+    mutationFn: (d) => api.post('/resources/admin/holidays', d),
     onSuccess: () => { toast.success('Holiday added'); qc.invalidateQueries({ queryKey: ['admin-holidays'] }); setModal({ open: false }); },
     onError: (e) => toast.error(e.response?.data?.error || 'Failed'),
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/resources/admin/holidays/${id}`, data),
+    mutationFn: ({ id, data }) => api.put(`/resources/admin/holidays/${id}`, data),
     onSuccess: () => { toast.success('Holiday updated'); qc.invalidateQueries({ queryKey: ['admin-holidays'] }); setModal({ open: false }); },
     onError: (e) => toast.error(e.response?.data?.error || 'Failed'),
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => api.delete(`/api/resources/admin/holidays/${id}`),
+    mutationFn: (id) => api.delete(`/resources/admin/holidays/${id}`),
     onSuccess: () => { toast.success('Holiday deleted'); qc.invalidateQueries({ queryKey: ['admin-holidays'] }); setDeleteModal({ open: false }); },
     onError: () => toast.error('Failed to delete'),
   });

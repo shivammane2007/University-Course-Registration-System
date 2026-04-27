@@ -17,7 +17,9 @@ const app = express();
 // ─── Core Middleware ──────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? process.env.CLIENT_URL : 'http://localhost:3000',
+  origin: process.env.NODE_ENV === 'production'
+    ? process.env.CLIENT_URL
+    : ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
 }));
 app.use(morgan('dev'));

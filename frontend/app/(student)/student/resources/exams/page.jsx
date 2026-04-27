@@ -19,7 +19,7 @@ export default function ExaminationSchedule() {
     const fetchExams = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/api/resources/exams', {
+        const res = await api.get('/resources/exams', {
           params: { search, semester: semesterFilter }
         });
         setExams(res.data.data);

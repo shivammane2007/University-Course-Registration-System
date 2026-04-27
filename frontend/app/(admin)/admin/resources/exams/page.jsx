@@ -23,7 +23,7 @@ const examSchema = z.object({
 });
 
 const fetchExams = ({ search, semester }) =>
-  api.get('/api/resources/exams', { params: { search, semester } }).then((r) => r.data);
+  api.get('/resources/exams', { params: { search, semester } }).then((r) => r.data);
 
 export default function AdminExamsPage() {
   const qc = useQueryClient();
@@ -51,19 +51,19 @@ export default function AdminExamsPage() {
   };
 
   const createMut = useMutation({
-    mutationFn: (d) => api.post('/api/resources/admin/exams', d),
+    mutationFn: (d) => api.post('/resources/admin/exams', d),
     onSuccess: () => { toast.success('Exam scheduled'); qc.invalidateQueries({ queryKey: ['admin-exams'] }); setModal({ open: false }); },
     onError: (e) => toast.error(e.response?.data?.error || 'Failed'),
   });
 
   const updateMut = useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/resources/admin/exams/${id}`, data),
+    mutationFn: ({ id, data }) => api.put(`/resources/admin/exams/${id}`, data),
     onSuccess: () => { toast.success('Exam updated'); qc.invalidateQueries({ queryKey: ['admin-exams'] }); setModal({ open: false }); },
     onError: (e) => toast.error(e.response?.data?.error || 'Failed'),
   });
 
   const deleteMut = useMutation({
-    mutationFn: (id) => api.delete(`/api/resources/admin/exams/${id}`),
+    mutationFn: (id) => api.delete(`/resources/admin/exams/${id}`),
     onSuccess: () => { toast.success('Exam deleted'); qc.invalidateQueries({ queryKey: ['admin-exams'] }); setDeleteModal({ open: false }); },
     onError: () => toast.error('Failed to delete'),
   });

@@ -20,7 +20,7 @@ export default function DigitalLibrary() {
     const fetchResources = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/api/resources/library', {
+        const res = await api.get('/resources/library', {
           params: { search, category: activeTab, status: 'Active' }
         });
         setResources(res.data.data);

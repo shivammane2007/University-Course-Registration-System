@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Calendar, LogOut, GraduationCap, Library } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Calendar, CalendarDays, LogOut, GraduationCap, Library } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
@@ -11,6 +11,7 @@ const links = [
   { href: '/faculty/courses', label: 'My Courses', icon: BookOpen },
   { href: '/faculty/schedule', label: 'Schedule', icon: Calendar },
   { href: '/faculty/library', label: 'Library', icon: Library },
+  { href: '/faculty/holidays', label: 'Holidays', icon: CalendarDays },
 ];
 
 export default function FacultySidebar() {

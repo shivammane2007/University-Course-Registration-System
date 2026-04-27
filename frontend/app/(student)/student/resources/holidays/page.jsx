@@ -11,40 +11,55 @@ import api from '@/lib/axios';
 
 const months = ['All', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
+const typeBadge = {
+  Public:     'bg-red-50 text-red-600 border-red-100',
+  University: 'bg-blue-50 text-blue-600 border-blue-100',
+  Vacation:   'bg-purple-50 text-purple-600 border-purple-100',
+  Event:      'bg-amber-50 text-amber-600 border-amber-100',
+};
+
 export default function HolidayCalendar() {
   const [search, setSearch] = useState('');
   const [activeMonth, setActiveMonth] = useState('All');
+  const [typeFilter, setTypeFilter]   = useState('All');
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchHolidays = async () => {
       try {
         setLoading(true);
-        const res = await api.get('/api/resources/holidays', {
-          params: { search, status: 'Active' }
+        const res = await api.get('/resources/holidays', {
+          params: { search, status: 'Active' },
+          signal: controller.signal,
         });
         
         // Enrich holidays with month names
-        const enriched = res.data.data.map(h => ({
+        const enriched = (res.data.data || []).map(h => ({
           ...h,
           monthName: new Date(h.date).toLocaleDateString('en-US', { month: 'long' })
         }));
         
         setHolidays(enriched);
       } catch (error) {
-        console.error('Failed to fetch holidays:', error);
+        if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+          console.error('Failed to fetch holidays:', error);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     const timer = setTimeout(fetchHolidays, 300);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); controller.abort(); };
   }, [search]);
 
   const filtered = holidays.filter(h => {
-    return activeMonth === 'All' || h.monthName === activeMonth;
+    const monthOk = activeMonth === 'All' || h.monthName === activeMonth;
+    const typeOk  = typeFilter  === 'All' || h.type === typeFilter;
+    return monthOk && typeOk;
   });
 
   const upcomingHoliday = holidays.find(h => new Date(h.date) >= new Date()) || holidays[0];
@@ -76,7 +91,7 @@ export default function HolidayCalendar() {
           <div className="lg:col-span-2 space-y-8">
             {/* Filters */}
             <div className="card border-none shadow-xl shadow-slate-200/50 p-4 sm:p-6">
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col gap-4">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-accent transition-colors" />
                   <input
@@ -86,6 +101,23 @@ export default function HolidayCalendar() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="form-input pl-11 h-12 shadow-none border-slate-100 focus:border-blue-200 bg-slate-50/50"
                   />
+                </div>
+                {/* Type filter chips */}
+                <div className="flex flex-wrap gap-2">
+                  {['All', 'Public', 'University', 'Vacation', 'Event'].map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTypeFilter(t)}
+                      className={cn(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all',
+                        typeFilter === t
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/25'
+                          : 'bg-white text-slate-500 border-slate-200 hover:border-blue-200 hover:text-blue-600'
+                      )}
+                    >
+                      {t}
+                    </button>
+                  ))}
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0">
                   {months.map((m) => (
@@ -124,20 +156,17 @@ export default function HolidayCalendar() {
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {monthHolidays.map((h) => (
-                          <div key={h.id} className="card group hover:shadow-2xl hover:shadow-blue-500/10 border-slate-100/50 transition-all duration-500 p-5 flex items-center gap-5">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex flex-col items-center justify-center text-blue-600 font-display group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
+                          <div key={h.id} className="card group hover:shadow-2xl hover:shadow-blue-500/10 border-slate-100/50 transition-all duration-500 p-5 flex items-start gap-5">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex flex-col items-center justify-center text-blue-600 font-display flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500">
                               <span className="text-lg font-bold leading-none">{new Date(h.date).getDate()}</span>
                               <span className="text-[8px] font-bold uppercase tracking-tighter">{month.substring(0, 3)}</span>
                             </div>
-                            <div>
+                            <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-primary-900 group-hover:text-blue-600 transition-colors">{h.title}</h4>
-                              <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <span className={cn(
                                   "text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-widest",
-                                  h.type === 'Public' ? "bg-red-50 text-red-600 border-red-100" :
-                                  h.type === 'Vacation' ? "bg-purple-50 text-purple-600 border-purple-100" :
-                                  h.type === 'University' ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                  "bg-slate-50 text-slate-500 border-slate-100"
+                                  typeBadge[h.type] || 'bg-slate-50 text-slate-500 border-slate-100'
                                 )}>
                                   {h.type}
                                 </span>
@@ -145,6 +174,9 @@ export default function HolidayCalendar() {
                                   {new Date(h.date).toLocaleDateString('en-US', { weekday: 'long' })}
                                 </span>
                               </div>
+                              {h.description && (
+                                <p className="text-xs text-muted mt-1.5 line-clamp-1 font-medium">{h.description}</p>
+                              )}
                             </div>
                           </div>
                         ))}
