@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import FacultySidebar from '@/components/faculty/FacultySidebar';
+import FacultyLiveToast from '@/components/attendance/FacultyLiveToast';
 
 export default function FacultyLayout({ children }) {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function FacultyLayout({ children }) {
 
   return (
     <div className="layout-wrapper">
+      <FacultyLiveToast />
       <FacultySidebar />
       <main className="page-content">
         <div className="page-inner">{children}</div>

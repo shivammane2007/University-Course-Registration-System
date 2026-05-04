@@ -47,6 +47,7 @@ model Faculty {
   department       Department        @relation(fields: [dept_id], references: [dept_id])
   libraryResources LibraryResource[] @relation("FacultyUploadedResources")
   schedules        Schedule[]
+  attendances      Attendance[]
 
   @@index([dept_id], map: "faculties_dept_id_fkey")
   @@map("faculties")
@@ -75,6 +76,7 @@ model Student {
   created_at        DateTime    @default(now())
   enrolments        Enrolment[]
   department        Department  @relation(fields: [dept_id], references: [dept_id])
+  attendances       Attendance[]
 
   @@index([dept_id], map: "students_dept_id_fkey")
   @@map("students")
@@ -101,6 +103,7 @@ model Course {
   department         Department      @relation(fields: [dept_id], references: [dept_id])
   enrolments         Enrolment[]
   schedules          Schedule[]
+  attendances        Attendance[]
 
   @@index([created_by_faculty], map: "courses_created_by_faculty_fkey")
   @@index([created_by], map: "courses_created_by_fkey")
@@ -232,4 +235,32 @@ enum EnrolmentStatus {
   Pending
   Approved
   Dropped
+}
+
+model Attendance {
+  id              Int      @id @default(autoincrement())
+  student_id      Int
+  course_id       Int
+  faculty_id      Int
+  attendance_date DateTime @db.Date
+  marked_at       DateTime @default(now())
+  status          AttendanceStatus @default(Present)
+  source          String   @default("Student Self Marked") @db.VarChar(100)
+
+  student         Student  @relation(fields: [student_id], references: [student_id])
+  course          Course   @relation(fields: [course_id], references: [course_id])
+  faculty         Faculty  @relation(fields: [faculty_id], references: [faculty_id])
+
+  @@unique([student_id, course_id, attendance_date])
+  @@index([student_id])
+  @@index([course_id])
+  @@index([faculty_id])
+  @@index([attendance_date])
+  @@map("attendances")
+}
+
+enum AttendanceStatus {
+  Present
+  Absent
+  Late
 }

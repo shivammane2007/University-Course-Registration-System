@@ -10,6 +10,7 @@ const adminRoutes = require('./src/modules/admin/admin.routes');
 const facultyRoutes = require('./src/modules/faculty/faculty.routes');
 const studentRoutes = require('./src/modules/student/student.routes');
 const resourceRoutes = require('./src/modules/resources/resources.routes');
+const attendanceRoutes = require('./routes/attendance');
 const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/faculty', facultyRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api', attendanceRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────
 app.use((req, res) => {
