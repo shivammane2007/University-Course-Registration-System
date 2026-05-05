@@ -45,14 +45,13 @@ export default function FacultyLiveToast() {
               </div>
               <div className="ml-3 flex-1">
                 <p className="text-sm font-medium text-gray-900">
-                  Attendance Marked
+                  Lecture Attendance Marked
                 </p>
                 <p className="mt-1 text-sm text-gray-500">
-                  <span className="font-semibold text-gray-800">{data.studentName}</span> marked attendance
+                  <span className="font-semibold text-gray-800">{data.studentName}</span> attended {data.courseName} lecture
                 </p>
-                <div className="mt-2 text-xs text-gray-400 flex flex-col gap-1">
-                  <span>Course: {data.courseName}</span>
-                  <span>{new Date(data.time).toLocaleTimeString()}</span>
+                <div className="mt-2 text-xs text-gray-400">
+                  <span>Time: {new Date(data.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </div>
             </div>
@@ -66,7 +65,7 @@ export default function FacultyLiveToast() {
             </button>
           </div>
         </div>
-      ), { duration: 3000 });
+      ), { duration: 3000, id: `attendance-${data.studentName}-${data.time}` });
     });
 
     return () => {

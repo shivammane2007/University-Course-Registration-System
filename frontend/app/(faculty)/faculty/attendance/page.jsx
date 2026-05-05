@@ -6,7 +6,8 @@ import { toast } from 'react-hot-toast';
 export default function FacultyAttendancePage() {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [attendance, setAttendance] = useState([]);
+  const [attendance, setAttendance] = useState({ present: [], absent: [] });
+  const [activeTab, setActiveTab] = useState('present');
   const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
 
@@ -49,15 +50,22 @@ export default function FacultyAttendancePage() {
     try {
       const res = await axios.get(`/faculty/attendance/course/${selectedCourse}?date=${dateFilter}`);
       if (res.data?.success) {
-        setAttendance(res.data.data);
+        if (Array.isArray(res.data.data)) {
+          setAttendance({ present: res.data.data, absent: [] });
+        } else {
+          setAttendance(res.data.data);
+        }
       }
     } catch (err) {
       toast.error('Failed to load attendance');
     }
   };
 
-  const presentCount = attendance.filter(a => a.status === 'Present').length;
-  const absentCount = attendance.filter(a => a.status === 'Absent').length;
+  const presentCount = attendance.present?.length || 0;
+  const absentCount = attendance.absent?.length || 0;
+  const totalRecords = presentCount + absentCount;
+  
+  const displayedRecords = activeTab === 'present' ? attendance.present : attendance.absent;
 
   return (
     <div className="space-y-6">
@@ -102,7 +110,7 @@ export default function FacultyAttendancePage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Total Records</p>
-            <p className="text-2xl font-bold text-gray-900">{attendance.length}</p>
+            <p className="text-2xl font-bold text-gray-900">{totalRecords}</p>
           </div>
           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
             📊
@@ -128,14 +136,33 @@ export default function FacultyAttendancePage() {
         </div>
       </div>
 
+      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-max mt-6">
+        <button
+          onClick={() => setActiveTab('present')}
+          className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'present' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Present Students
+        </button>
+        <button
+          onClick={() => setActiveTab('absent')}
+          className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'absent' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Absent Students
+        </button>
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="p-12 flex justify-center">
              <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : attendance.length === 0 ? (
+        ) : displayedRecords?.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
-            No attendance records found for this course on the selected date.
+            No {activeTab} students found for this course on the selected date.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -150,7 +177,7 @@ export default function FacultyAttendancePage() {
                 </tr>
               </thead>
               <tbody>
-                {attendance.map((record) => (
+                {displayedRecords?.map((record) => (
                   <tr key={record.id} className="bg-white border-b hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {record.student?.user_id}
@@ -159,7 +186,7 @@ export default function FacultyAttendancePage() {
                       {record.student?.first_name} {record.student?.last_name}
                     </td>
                     <td className="px-6 py-4">
-                      {new Date(record.marked_at).toLocaleTimeString()}
+                      {record.marked_at ? new Date(record.marked_at).toLocaleTimeString() : '-'}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${

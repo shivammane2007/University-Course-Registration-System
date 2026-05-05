@@ -40,6 +40,18 @@ const markAttendance = async (req, res) => {
     const now = new Date();
     const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 
+    // Check if today is a holiday
+    const holiday = await prisma.holiday.findFirst({
+      where: {
+        date: today,
+        status: 'Active'
+      }
+    });
+
+    if (holiday) {
+      return res.status(400).json({ success: false, message: 'Attendance cannot be marked on holidays' });
+    }
+
     // Check if already marked today
     const existing = await prisma.attendance.findUnique({
       where: {
@@ -128,7 +140,25 @@ const getFacultyCourseAttendance = async (req, res) => {
       orderBy: { marked_at: 'desc' }
     });
 
-    res.status(200).json({ success: true, data: attendance });
+    const enrolledStudents = await prisma.enrolment.findMany({
+      where: {
+        course_id: parseInt(courseId),
+        status: 'Approved'
+      },
+      include: { student: true }
+    });
+
+    const presentStudentIds = attendance.map(a => a.student_id);
+    const absent = enrolledStudents
+      .filter(e => !presentStudentIds.includes(e.student_id))
+      .map(e => ({
+        id: `absent_${e.student_id}`,
+        student: e.student,
+        status: 'Absent',
+        source: '-'
+      }));
+
+    res.status(200).json({ success: true, data: { present: attendance, absent } });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error' });
   }

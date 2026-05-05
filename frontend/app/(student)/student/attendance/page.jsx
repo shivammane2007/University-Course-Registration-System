@@ -9,13 +9,15 @@ export default function StudentAttendancePage() {
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isHoliday, setIsHoliday] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [coursesRes, historyRes] = await Promise.all([
+      const [coursesRes, historyRes, holidaysRes] = await Promise.all([
         axios.get('/student/courses/enrolled'),
-        axios.get('/student/attendance/history')
+        axios.get('/student/attendance/history'),
+        axios.get('/resources/holidays')
       ]);
       
       if (coursesRes.data?.success) {
@@ -25,6 +27,18 @@ export default function StudentAttendancePage() {
       
       if (historyRes.data?.success) {
         setHistory(historyRes.data.data);
+      }
+      
+      if (holidaysRes.data?.success) {
+        const holidays = holidaysRes.data.data.filter(h => h.status === 'Active');
+        const now = new Date();
+        const todayStr = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).toISOString().split('T')[0];
+        const isTodayHoliday = holidays.some(h => {
+           // Parse the DB date which is returned as ISO string
+           const hDateStr = new Date(h.date).toISOString().split('T')[0];
+           return hDateStr === todayStr;
+        });
+        setIsHoliday(isTodayHoliday);
       }
     } catch (err) {
       toast.error('Failed to load attendance data');
@@ -36,6 +50,21 @@ export default function StudentAttendancePage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const getCoursesToMark = () => {
+    const now = new Date();
+    const todayStr = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())).toISOString().split('T')[0];
+    
+    return enrolledCourses.filter(course => {
+      const markedToday = history.some(record => {
+        const recordDateStr = new Date(record.attendance_date).toISOString().split('T')[0];
+        return record.course_id === course.course_id && recordDateStr === todayStr;
+      });
+      return !markedToday;
+    });
+  };
+
+  const coursesToMark = getCoursesToMark();
 
   return (
     <div className="space-y-6">
@@ -71,18 +100,19 @@ export default function StudentAttendancePage() {
         </div>
       ) : activeTab === 'mark' ? (
         <div>
-          {enrolledCourses.length === 0 ? (
+          {coursesToMark.length === 0 ? (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-              <p className="text-gray-500 text-lg">No enrolled courses available.</p>
+              <p className="text-gray-500 text-lg">You have no pending attendance for today.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {enrolledCourses.map(course => (
-                <AttendanceCard 
-                  key={course.course_id} 
-                  course={course} 
-                  onMarked={fetchData} 
-                />
+              {coursesToMark.map(course => (
+                  <AttendanceCard 
+                    key={course.course_id} 
+                    course={course} 
+                    onMarked={fetchData} 
+                    isHoliday={isHoliday}
+                  />
               ))}
             </div>
           )}

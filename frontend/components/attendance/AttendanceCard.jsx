@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from '@/lib/axios';
 import { toast } from 'react-hot-toast';
 
-export default function AttendanceCard({ course, onMarked }) {
+export default function AttendanceCard({ course, onMarked, isHoliday }) {
   const [loading, setLoading] = useState(false);
 
   const handleMarkAttendance = async () => {
@@ -42,9 +42,14 @@ export default function AttendanceCard({ course, onMarked }) {
           </p>
         </div>
       </div>
+      {isHoliday && (
+        <div className="mb-4 text-sm text-center text-red-600 bg-red-50 py-2 rounded-md border border-red-100">
+          Attendance cannot be marked on holidays.
+        </div>
+      )}
       <button
         onClick={handleMarkAttendance}
-        disabled={loading}
+        disabled={loading || isHoliday}
         className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {loading ? (
