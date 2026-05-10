@@ -1,8 +1,5 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const prisma = require('../../config/db');
 
-// ─── Gemini Client ───────────────────────────────────────────────
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ─── Exact DB Schema Context for the AI ─────────────────────────
 // Table names from schema.prisma @@map values
@@ -110,37 +107,56 @@ function ensureLimit(sql) {
   return `${withoutSemicolon} LIMIT 50`;
 }
 
-// ─── Generate SQL via Gemini ─────────────────────────────────────
+// ─── Generate SQL via Gemini REST API (v1 — no SDK version issues) ──────────
 async function generateSQL(naturalQuery) {
   if (!naturalQuery || !naturalQuery.trim()) {
     throw new Error('Natural language query is required.');
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not configured in .env');
 
   const prompt = `${SCHEMA_CONTEXT}\n\nUser Question: "${naturalQuery.trim()}"\n\nSQL Query:`;
 
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  let sql = response.text().trim();
+  // Use v1beta REST API — required for Gemini 2.x models
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-  // Strip markdown code fences if Gemini returns them anyway
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    let friendly = `Gemini API error (${response.status}).`;
+    if (response.status === 429) friendly = 'Gemini API rate limit reached. Please wait a moment and try again.';
+    if (response.status === 401 || response.status === 403) friendly = 'Invalid Gemini API key. Please update GEMINI_API_KEY in backend/.env';
+    if (response.status === 404) friendly = 'Gemini model not available. Check your API key has Generative AI access.';
+    throw new Error(`${friendly} Details: ${errText.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  let sql = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+
+  if (!sql) throw new Error('AI returned an empty response. Try rephrasing your question.');
+
+  // Strip markdown code fences if Gemini returns them
   sql = sql
     .replace(/^```sql\s*/i, '')
     .replace(/^```\s*/i, '')
     .replace(/```\s*$/i, '')
     .trim();
 
-  // Validate the generated SQL before returning it
   const validation = validateSQL(sql);
   if (!validation.valid) {
     throw new Error(`AI generated an unsafe query. ${validation.reason}`);
   }
 
-  // Ensure LIMIT 50
-  sql = ensureLimit(sql);
-
-  return sql;
+  return ensureLimit(sql);
 }
 
 // ─── Execute Raw Query via Prisma ────────────────────────────────
