@@ -1,9 +1,10 @@
 'use client';
 import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, PieChart, TrendingUp, Download, Calendar, Filter, Users, BookOpen, Loader2 } from 'lucide-react';
+import { BarChart3, TrendingUp, Download, Loader2 } from 'lucide-react';
 import api from '@/lib/axios';
 import PageHeader from '@/components/shared/PageHeader';
+import AIQueryBox from '@/components/AIQueryBox';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -64,6 +65,10 @@ export default function ReportsPage() {
           </button>
         }
       />
+
+      <div className="mb-8">
+        <AIQueryBox />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Department Distribution */}

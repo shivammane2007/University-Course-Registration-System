@@ -11,6 +11,7 @@ const facultyRoutes = require('./src/modules/faculty/faculty.routes');
 const studentRoutes = require('./src/modules/student/student.routes');
 const resourceRoutes = require('./src/modules/resources/resources.routes');
 const attendanceRoutes = require('./routes/attendance');
+const aiRoutes = require('./src/modules/ai/ai.routes');
 const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/faculty', facultyRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api', attendanceRoutes);
+app.use('/api/ai', aiRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────
 app.use((req, res) => {
