@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -52,12 +52,22 @@ export default function StudentsPage() {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [modal, setModal] = useState({ open: false, mode: 'add', student: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, student: null });
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-students', page, search],
-    queryFn: () => fetchStudents({ page, search }),
+    queryKey: ['admin-students', page, debouncedSearch],
+    queryFn: () => fetchStudents({ page, search: debouncedSearch }),
   });
   const { data: depts = [] } = useQuery({ queryKey: ['depts'], queryFn: fetchDepts });
 
@@ -107,7 +117,7 @@ export default function StudentsPage() {
     }
   };
 
-  const handleSearch = useCallback((val) => { setSearch(val); setPage(1); }, []);
+  const handleSearch = useCallback((val) => { setSearchInput(val); }, []);
 
   const columns = [
     { key: 'first_name', label: 'First Name' },
@@ -219,7 +229,7 @@ export default function StudentsPage() {
           pagination={data?.pagination}
           onPageChange={setPage}
           onSearch={handleSearch}
-          searchPlaceholder="Search by name or PRN..."
+          searchPlaceholder="Search by name, PRN, or department..."
         />
       </div>
 

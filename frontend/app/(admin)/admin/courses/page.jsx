@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,10 +32,20 @@ export default function CoursesPage() {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [modal, setModal] = useState({ open: false, mode: 'add', course: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, course: null });
 
-  const { data, isLoading } = useQuery({ queryKey: ['admin-courses', page, search], queryFn: () => fetchCourses({ page, search }) });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const { data, isLoading } = useQuery({ queryKey: ['admin-courses', page, debouncedSearch], queryFn: () => fetchCourses({ page, search: debouncedSearch }) });
   const { data: depts = [] } = useQuery({ queryKey: ['depts'], queryFn: fetchDepts });
   const { data: allFaculty = [] } = useQuery({ queryKey: ['all-faculty'], queryFn: fetchFaculties });
 
@@ -76,7 +86,7 @@ export default function CoursesPage() {
     else updateMut.mutate({ id: modal.course.course_id, data: payload });
   };
 
-  const handleSearch = useCallback((val) => { setSearch(val); setPage(1); }, []);
+  const handleSearch = useCallback((val) => { setSearchInput(val); }, []);
 
   const columns = [
     { 
@@ -168,7 +178,7 @@ export default function CoursesPage() {
           pagination={data?.pagination}
           onPageChange={setPage} 
           onSearch={handleSearch} 
-          searchPlaceholder="Search curriculum..." 
+          searchPlaceholder="Search by course name, department, or mode..." 
         />
       </div>
 

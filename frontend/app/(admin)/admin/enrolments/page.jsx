@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, XCircle, Clock, Search, Filter, User, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -8,17 +8,27 @@ import DataTable from '@/components/shared/DataTable';
 import PageHeader from '@/components/shared/PageHeader';
 import Badge from '@/components/shared/Badge';
 
-const fetchEnrolments = ({ page, status }) =>
-  api.get('/admin/enrolments', { params: { page, limit: 10, status } }).then((r) => r.data);
+const fetchEnrolments = ({ page, status, search }) =>
+  api.get('/admin/enrolments', { params: { page, limit: 10, status, search } }).then((r) => r.data);
 
 export default function EnrolmentsPage() {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1); // Reset pagination on new search
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-enrolments', page, status],
-    queryFn: () => fetchEnrolments({ page, status }),
+    queryKey: ['admin-enrolments', page, status, debouncedSearch],
+    queryFn: () => fetchEnrolments({ page, status, search: debouncedSearch }),
   });
 
   const approveMut = useMutation({
@@ -124,7 +134,8 @@ export default function EnrolmentsPage() {
           loading={isLoading} 
           pagination={data?.pagination}
           onPageChange={setPage} 
-          searchPlaceholder="Filter by student name..."
+          onSearch={setSearchInput}
+          searchPlaceholder="Filter by student, PRN, course, status..."
         />
       </div>
     </div>

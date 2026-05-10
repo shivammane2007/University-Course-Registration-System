@@ -39,15 +39,21 @@ const getDashboardStats = async () => {
 // ─── Students ─────────────────────────────────────────────────
 const getStudents = async ({ page = 1, limit = 10, search = '' }) => {
   const skip = (page - 1) * limit;
-  const where = search
-    ? {
+  let where = {};
+
+  if (search) {
+    const keywords = search.toLowerCase().trim().split(/\s+/);
+    if (keywords.length > 0) {
+      where.AND = keywords.map(k => ({
         OR: [
-          { first_name: { contains: search } },
-          { last_name: { contains: search } },
-          { user_id: { contains: search } },
-        ],
-      }
-    : {};
+          { first_name: { contains: k } },
+          { last_name: { contains: k } },
+          { user_id: { contains: k } },
+          { department: { dept_name: { contains: k } } }
+        ]
+      }));
+    }
+  }
 
   const [data, total] = await Promise.all([
     prisma.student.findMany({
@@ -86,9 +92,23 @@ const deleteStudent = async (id) => {
 // ─── Faculty ──────────────────────────────────────────────────
 const getFaculties = async ({ page = 1, limit = 10, search = '' }) => {
   const skip = (page - 1) * limit;
-  const where = search
-    ? { OR: [{ first_name: { contains: search } }, { last_name: { contains: search } }, { user_id: { contains: search } }] }
-    : {};
+  let where = {};
+
+  if (search) {
+    const keywords = search.toLowerCase().trim().split(/\s+/);
+    if (keywords.length > 0) {
+      where.AND = keywords.map(k => ({
+        OR: [
+          { first_name: { contains: k } },
+          { last_name: { contains: k } },
+          { user_id: { contains: k } },
+          { designation: { contains: k } },
+          { domain: { contains: k } },
+          { department: { dept_name: { contains: k } } }
+        ]
+      }));
+    }
+  }
 
   const [rawData, total] = await Promise.all([
     prisma.faculty.findMany({
@@ -146,7 +166,29 @@ const deleteFaculty = async (id) => {
 // ─── Courses ──────────────────────────────────────────────────
 const getCourses = async ({ page = 1, limit = 10, search = '' }) => {
   const skip = (page - 1) * limit;
-  const where = search ? { course_name: { contains: search } } : {};
+  let where = {};
+
+  if (search) {
+    const keywords = search.toLowerCase().trim().split(/\s+/);
+    if (keywords.length > 0) {
+      where.AND = keywords.map(k => {
+        const validModes = ['Online', 'Offline'];
+        const matchedModes = validModes.filter(s => s.toLowerCase().includes(k));
+
+        const orConditions = [
+          { course_name: { contains: k } },
+          { timing: { contains: k } },
+          { department: { dept_name: { contains: k } } }
+        ];
+
+        if (matchedModes.length > 0) {
+          orConditions.push({ mode: { in: matchedModes } });
+        }
+
+        return { OR: orConditions };
+      });
+    }
+  }
 
   const [data, total] = await Promise.all([
     prisma.course.findMany({
@@ -246,9 +288,36 @@ const deleteDepartment = async (id) => {
 };
 
 // ─── Enrolments ───────────────────────────────────────────────
-const getEnrolments = async ({ page = 1, limit = 10, status = '' }) => {
+const getEnrolments = async ({ page = 1, limit = 10, status = '', search = '' }) => {
   const skip = (page - 1) * limit;
-  const where = status ? { status } : {};
+  let where = {};
+  
+  if (status) {
+    where.status = status;
+  }
+
+  if (search) {
+    const keywords = search.toLowerCase().trim().split(/\s+/);
+    if (keywords.length > 0) {
+      where.AND = keywords.map(k => {
+        const validStatuses = ['Pending', 'Approved', 'Dropped'];
+        const matchedStatuses = validStatuses.filter(s => s.toLowerCase().includes(k));
+        
+        const orConditions = [
+          { student: { first_name: { contains: k } } },
+          { student: { last_name: { contains: k } } },
+          { student: { user_id: { contains: k } } },
+          { course: { course_name: { contains: k } } }
+        ];
+
+        if (matchedStatuses.length > 0) {
+          orConditions.push({ status: { in: matchedStatuses } });
+        }
+
+        return { OR: orConditions };
+      });
+    }
+  }
 
   const [data, total] = await Promise.all([
     prisma.enrolment.findMany({

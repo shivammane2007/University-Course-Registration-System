@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,14 +41,24 @@ export default function FacultiesPage() {
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1); // Reset pagination on new search
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-faculties', page, debouncedSearch],
+    queryFn: () => fetchFaculties({ page, search: debouncedSearch }),
+  });
   const [modal, setModal] = useState({ open: false, mode: 'add', faculty: null });
   const [deleteModal, setDeleteModal] = useState({ open: false, faculty: null });
   const [scheduleModal, setScheduleModal] = useState({ open: false, faculty: null });
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['admin-faculties', page, search],
-    queryFn: () => fetchFaculties({ page, search }),
-  });
   const { data: depts = [] } = useQuery({ queryKey: ['depts'], queryFn: fetchDepts });
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({ 
@@ -91,7 +101,7 @@ export default function FacultiesPage() {
     }
   };
 
-  const handleSearch = useCallback((val) => { setSearch(val); setPage(1); }, []);
+  const handleSearch = useCallback((val) => { setSearchInput(val); }, []);
 
   const handleInputSanitize = (e, pattern) => {
     const val = e.target.value;
